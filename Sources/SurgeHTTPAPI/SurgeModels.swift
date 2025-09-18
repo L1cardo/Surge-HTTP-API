@@ -1,86 +1,5 @@
 import Foundation
 
-// MARK: - 基础响应模型
-/// 通用响应模型，用于解析简单的 API 响应
-public struct SimpleResponse: Codable, Sendable {
-    /// 功能是否启用
-    public let enabled: Bool?
-    /// 模式
-    public let mode: String?
-    /// 策略
-    public let policy: String?
-    /// 错误信息
-    public let error: String?
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - enabled: 功能是否启用
-    ///   - mode: 模式
-    ///   - policy: 策略
-    ///   - error: 错误信息
-    public init(enabled: Bool? = nil, mode: String? = nil, policy: String? = nil, error: String? = nil) {
-        self.enabled = enabled
-        self.mode = mode
-        self.policy = policy
-        self.error = error
-    }
-}
-
-// MARK: - 模块状态模型
-/// 模块状态模型，用于表示模块的启用和可用状态
-public struct ModulesState: Codable, Sendable {
-    /// 已启用的模块列表
-    public let enabled: [String]
-    /// 可用的模块列表
-    public let available: [String]
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - enabled: 已启用的模块列表
-    ///   - available: 可用的模块列表
-    public init(enabled: [String], available: [String]) {
-        self.enabled = enabled
-        self.available = available
-    }
-}
-
-// MARK: - 模块切换参数模型
-/// 模块切换参数模型，用于启用或禁用模块
-public struct ModuleToggle: Codable, Sendable {
-    /// 模块名称
-    public let moduleName: String
-    /// 是否启用
-    public let enabled: Bool
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - moduleName: 模块名称
-    ///   - enabled: 是否启用
-    public init(moduleName: String, enabled: Bool) {
-        self.moduleName = moduleName
-        self.enabled = enabled
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case moduleName = "module_name"
-        case enabled
-    }
-}
-
-// MARK: - 日志级别枚举
-/// 日志级别枚举，用于表示不同的日志详细程度
-public enum LogLevel: String, Sendable {
-    /// 详细级别 - 输出所有日志信息
-    case verbose = "verbose"
-    /// 信息级别 - 输出一般信息和警告
-    case info = "info"
-    /// 警告级别 - 只输出警告和错误
-    case warning = "warning"
-    /// 通知级别 - 只输出通知信息
-    case notify = "notify"
-}
-
 // MARK: - 策略列表响应模型
 /// 策略列表响应模型，用于表示 /v1/policies 端点的响应数据
 public struct PoliciesResponse: Codable, Sendable {
@@ -185,278 +104,21 @@ public struct PolicyGroupItem: Codable, Sendable {
     }
 }
 
-// MARK: - 配置文件响应模型
-/// 配置文件响应模型，用于表示 /v1/profiles/current 端点的响应数据
-public struct ProfileResponse: Codable, Sendable {
-    /// 配置文件内容
-    public let profile: String
-    /// 原始配置文件内容
-    public let originalProfile: String
-    /// 配置文件名称
-    public let name: String
+// MARK: - 最近请求响应模型
+/// 最近请求响应模型，用于表示 /v1/requests/recent 端点的响应数据
+public struct RequestsResponse: Codable, Sendable {
+    /// 请求数组
+    public let requests: [Request]
     
     /// 初始化方法
-    /// - Parameters:
-    ///   - profile: 配置文件内容
-    ///   - originalProfile: 原始配置文件内容
-    ///   - name: 配置文件名称
-    public init(profile: String, originalProfile: String, name: String) {
-        self.profile = profile
-        self.originalProfile = originalProfile
-        self.name = name
+    /// - Parameter requests: 请求数组
+    public init(requests: [Request]) {
+        self.requests = requests
     }
     
     /// 编码键值
     enum CodingKeys: String, CodingKey {
-        case profile
-        case originalProfile = "originalProfile"
-        case name
-    }
-}
-
-// MARK: - 本地 DNS 记录模型
-/// 本地 DNS 记录模型，用于表示本地 DNS 缓存中的单个记录
-public struct LocalDNSRecord: Codable, Sendable {
-    /// IP 地址数据
-    public let data: String
-    /// 注释（可选）
-    public let comment: String?
-    /// 域名
-    public let domain: String
-    /// 来源（可选）
-    public let source: String?
-    /// 服务器（可选）
-    public let server: String?
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - data: IP 地址数据
-    ///   - comment: 注释
-    ///   - domain: 域名
-    ///   - source: 来源
-    ///   - server: 服务器
-    public init(data: String, comment: String?, domain: String, source: String?, server: String?) {
-        self.data = data
-        self.comment = comment
-        self.domain = domain
-        self.source = source
-        self.server = server
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case data
-        case comment
-        case domain
-        case source
-        case server
-    }
-}
-
-// MARK: - DNS 缓存记录模型
-/// DNS 缓存记录模型，用于表示 DNS 缓存中的单个记录
-public struct DNSCacheRecord: Codable, Sendable {
-    /// 域名
-    public let domain: String
-    /// 服务器 URL
-    public let server: String
-    /// 日志信息数组
-    public let logs: [String]
-    /// IP 地址数据数组
-    public let data: [String]
-    /// 路径
-    public let path: String
-    /// 耗时（秒）
-    public let timeCost: Double
-    /// 过期时间戳
-    public let expiresTime: Double
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - domain: 域名
-    ///   - server: 服务器 URL
-    ///   - logs: 日志信息数组
-    ///   - data: IP 地址数据数组
-    ///   - path: 路径
-    ///   - timeCost: 耗时（秒）
-    ///   - expiresTime: 过期时间戳
-    public init(domain: String, server: String, logs: [String], data: [String], path: String, timeCost: Double, expiresTime: Double) {
-        self.domain = domain
-        self.server = server
-        self.logs = logs
-        self.data = data
-        self.path = path
-        self.timeCost = timeCost
-        self.expiresTime = expiresTime
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case domain
-        case server
-        case logs
-        case data
-        case path
-        case timeCost = "timeCost"
-        case expiresTime = "expiresTime"
-    }
-}
-
-// MARK: - DNS 缓存响应模型
-/// DNS 缓存响应模型，用于表示 /v1/dns 端点的响应数据
-public struct DNSCacheResponse: Codable, Sendable {
-    /// 本地 DNS 记录数组
-    public let local: [LocalDNSRecord]
-    /// DNS 缓存记录数组
-    public let dnsCache: [DNSCacheRecord]
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - local: 本地 DNS 记录数组
-    ///   - dnsCache: DNS 缓存记录数组
-    public init(local: [LocalDNSRecord], dnsCache: [DNSCacheRecord]) {
-        self.local = local
-        self.dnsCache = dnsCache
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case local
-        case dnsCache = "dnsCache"
-    }
-}
-
-/// 脚本类型枚举
-public enum ScriptType: String, Codable, Sendable {
-    case httpRequest = "http-request"
-    case httpResponse = "http-response"
-    case cron = "cron"
-    case event = "event"
-    case rule = "rule"
-    case dns = "dns"
-    case generic = "generic"
-}
-
-// MARK: - 脚本模型
-/// 脚本模型，用于表示单个脚本的信息
-public struct Script: Sendable {
-    /// 脚本路径
-    public let path: String
-    /// 是否启用
-    public let enabled: Bool
-    /// 脚本名称
-    public let name: String
-    /// 脚本类型
-    public let type: ScriptType
-    /// 脚本参数
-    public let parameters: [String: Sendable]
-    
-    /// 初始化方法
-    public init(path: String, enabled: Bool, name: String, type: ScriptType, parameters: [String: Sendable]) {
-        self.path = path
-        self.enabled = enabled
-        self.name = name
-        self.type = type
-        self.parameters = parameters
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case path
-        case enabled
-        case name
-        case type
-        case parameters
-    }
-}
-
-// MARK: - Script Codable 实现
-extension Script: Codable {
-    public init(from decoder: Decoder) throws {
-        let container: KeyedDecodingContainer<Script.CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
-        path = try container.decode(String.self, forKey: .path)
-        enabled = try container.decode(Bool.self, forKey: .enabled)
-        name = try container.decode(String.self, forKey: .name)
-        type = try container.decode(ScriptType.self, forKey: .type)
-        
-        // 解码 parameters 为字典，保持原始类型
-        let parametersContainer = try container.nestedContainer(keyedBy: DynamicKey.self, forKey: .parameters)
-        var parametersDict: [String: Sendable] = [:]
-        
-        for key in parametersContainer.allKeys {
-            // 尝试解码为不同类型的值
-            if let value = try? parametersContainer.decode(Bool.self, forKey: key) {
-                parametersDict[key.stringValue] = value
-            } else if let value = try? parametersContainer.decode(Int.self, forKey: key) {
-                parametersDict[key.stringValue] = value
-            } else if let value = try? parametersContainer.decode(Double.self, forKey: key) {
-                parametersDict[key.stringValue] = value
-            } else if let value = try? parametersContainer.decode(String.self, forKey: key) {
-                parametersDict[key.stringValue] = value
-            } else {
-                // 如果所有类型都失败，存储为 nil
-                parametersDict[key.stringValue] = nil
-            }
-        }
-        
-        parameters = parametersDict
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(path, forKey: .path)
-        try container.encode(enabled, forKey: .enabled)
-        try container.encode(name, forKey: .name)
-        try container.encode(type, forKey: .type)
-        
-        // 创建动态键容器来编码 parameters
-        var parametersContainer = container.nestedContainer(keyedBy: DynamicKey.self, forKey: .parameters)
-        for (key, value) in parameters {
-            let dynamicKey = DynamicKey(stringValue: key)!
-            if let boolValue = value as? Bool {
-                try parametersContainer.encode(boolValue, forKey: dynamicKey)
-            } else if let intValue = value as? Int {
-                try parametersContainer.encode(intValue, forKey: dynamicKey)
-            } else if let doubleValue = value as? Double {
-                try parametersContainer.encode(doubleValue, forKey: dynamicKey)
-            } else if let stringValue = value as? String {
-                try parametersContainer.encode(stringValue, forKey: dynamicKey)
-            }
-        }
-    }
-}
-
-// MARK: - 动态键
-/// 动态键，用于处理未知键名的编码/解码
-struct DynamicKey: CodingKey {
-    var stringValue: String
-    var intValue: Int?
-    
-    init?(stringValue: String) {
-        self.stringValue = stringValue
-        self.intValue = nil
-    }
-    
-    init?(intValue: Int) {
-        self.stringValue = "\(intValue)"
-        self.intValue = intValue
-    }
-}
-
-// MARK: - 脚本响应模型
-/// 脚本响应模型，用于表示 /v1/scripting 端点的响应数据
-public struct ScriptsResponse: Codable, Sendable {
-    /// 脚本数组
-    public let scripts: [Script]
-    
-    /// 初始化方法
-    public init(scripts: [Script]) {
-        self.scripts = scripts
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case scripts
+        case requests
     }
 }
 
@@ -703,21 +365,314 @@ public struct Request: Codable, Sendable {
     }
 }
 
-// MARK: - 最近请求响应模型
-/// 最近请求响应模型，用于表示 /v1/requests/recent 端点的响应数据
-public struct RequestsResponse: Codable, Sendable {
-    /// 请求数组
-    public let requests: [Request]
+// MARK: - 配置文件响应模型
+/// 配置文件响应模型，用于表示 /v1/profiles/current 端点的响应数据
+public struct ProfileResponse: Codable, Sendable {
+    /// 配置文件内容
+    public let profile: String
+    /// 原始配置文件内容
+    public let originalProfile: String
+    /// 配置文件名称
+    public let name: String
     
     /// 初始化方法
-    /// - Parameter requests: 请求数组
-    public init(requests: [Request]) {
-        self.requests = requests
+    /// - Parameters:
+    ///   - profile: 配置文件内容
+    ///   - originalProfile: 原始配置文件内容
+    ///   - name: 配置文件名称
+    public init(profile: String, originalProfile: String, name: String) {
+        self.profile = profile
+        self.originalProfile = originalProfile
+        self.name = name
     }
     
     /// 编码键值
     enum CodingKeys: String, CodingKey {
-        case requests
+        case profile
+        case originalProfile = "originalProfile"
+        case name
+    }
+}
+
+// MARK: - DNS 缓存响应模型
+/// DNS 缓存响应模型，用于表示 /v1/dns 端点的响应数据
+public struct DNSCacheResponse: Codable, Sendable {
+    /// 本地 DNS 记录数组
+    public let local: [LocalDNSRecord]
+    /// DNS 缓存记录数组
+    public let dnsCache: [DNSCacheRecord]
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - local: 本地 DNS 记录数组
+    ///   - dnsCache: DNS 缓存记录数组
+    public init(local: [LocalDNSRecord], dnsCache: [DNSCacheRecord]) {
+        self.local = local
+        self.dnsCache = dnsCache
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case local
+        case dnsCache = "dnsCache"
+    }
+}
+
+// MARK: - 本地 DNS 记录模型
+/// 本地 DNS 记录模型，用于表示本地 DNS 缓存中的单个记录
+public struct LocalDNSRecord: Codable, Sendable {
+    /// IP 地址数据
+    public let data: String
+    /// 注释（可选）
+    public let comment: String?
+    /// 域名
+    public let domain: String
+    /// 来源（可选）
+    public let source: String?
+    /// 服务器（可选）
+    public let server: String?
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - data: IP 地址数据
+    ///   - comment: 注释
+    ///   - domain: 域名
+    ///   - source: 来源
+    ///   - server: 服务器
+    public init(data: String, comment: String?, domain: String, source: String?, server: String?) {
+        self.data = data
+        self.comment = comment
+        self.domain = domain
+        self.source = source
+        self.server = server
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case data
+        case comment
+        case domain
+        case source
+        case server
+    }
+}
+
+// MARK: - DNS 缓存记录模型
+/// DNS 缓存记录模型，用于表示 DNS 缓存中的单个记录
+public struct DNSCacheRecord: Codable, Sendable {
+    /// 域名
+    public let domain: String
+    /// 服务器 URL
+    public let server: String
+    /// 日志信息数组
+    public let logs: [String]
+    /// IP 地址数据数组
+    public let data: [String]
+    /// 路径
+    public let path: String
+    /// 耗时（秒）
+    public let timeCost: Double
+    /// 过期时间戳
+    public let expiresTime: Double
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - domain: 域名
+    ///   - server: 服务器 URL
+    ///   - logs: 日志信息数组
+    ///   - data: IP 地址数据数组
+    ///   - path: 路径
+    ///   - timeCost: 耗时（秒）
+    ///   - expiresTime: 过期时间戳
+    public init(domain: String, server: String, logs: [String], data: [String], path: String, timeCost: Double, expiresTime: Double) {
+        self.domain = domain
+        self.server = server
+        self.logs = logs
+        self.data = data
+        self.path = path
+        self.timeCost = timeCost
+        self.expiresTime = expiresTime
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case domain
+        case server
+        case logs
+        case data
+        case path
+        case timeCost = "timeCost"
+        case expiresTime = "expiresTime"
+    }
+}
+
+// MARK: - 脚本响应模型
+/// 脚本响应模型，用于表示 /v1/scripting 端点的响应数据
+public struct ScriptsResponse: Codable, Sendable {
+    /// 脚本数组
+    public let scripts: [Script]
+    
+    /// 初始化方法
+    public init(scripts: [Script]) {
+        self.scripts = scripts
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case scripts
+    }
+}
+
+/// 脚本类型枚举
+public enum ScriptType: String, Codable, Sendable {
+    case httpRequest = "http-request"
+    case httpResponse = "http-response"
+    case cron = "cron"
+    case event = "event"
+    case rule = "rule"
+    case dns = "dns"
+    case generic = "generic"
+}
+
+// MARK: - 脚本模型
+/// 脚本模型，用于表示单个脚本的信息
+public struct Script: Sendable {
+    /// 脚本路径
+    public let path: String
+    /// 是否启用
+    public let enabled: Bool
+    /// 脚本名称
+    public let name: String
+    /// 脚本类型
+    public let type: ScriptType
+    /// 脚本参数
+    public let parameters: [String: Sendable]
+    
+    /// 初始化方法
+    public init(path: String, enabled: Bool, name: String, type: ScriptType, parameters: [String: Sendable]) {
+        self.path = path
+        self.enabled = enabled
+        self.name = name
+        self.type = type
+        self.parameters = parameters
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case path
+        case enabled
+        case name
+        case type
+        case parameters
+    }
+}
+
+// MARK: - Script Codable 实现
+extension Script: Codable {
+    public init(from decoder: Decoder) throws {
+        let container: KeyedDecodingContainer<Script.CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+        path = try container.decode(String.self, forKey: .path)
+        enabled = try container.decode(Bool.self, forKey: .enabled)
+        name = try container.decode(String.self, forKey: .name)
+        type = try container.decode(ScriptType.self, forKey: .type)
+        
+        // 解码 parameters 为字典，保持原始类型
+        let parametersContainer = try container.nestedContainer(keyedBy: DynamicKey.self, forKey: .parameters)
+        var parametersDict: [String: Sendable] = [:]
+        
+        for key in parametersContainer.allKeys {
+            // 尝试解码为不同类型的值
+            if let value = try? parametersContainer.decode(Bool.self, forKey: key) {
+                parametersDict[key.stringValue] = value
+            } else if let value = try? parametersContainer.decode(Int.self, forKey: key) {
+                parametersDict[key.stringValue] = value
+            } else if let value = try? parametersContainer.decode(Double.self, forKey: key) {
+                parametersDict[key.stringValue] = value
+            } else if let value = try? parametersContainer.decode(String.self, forKey: key) {
+                parametersDict[key.stringValue] = value
+            } else {
+                // 如果所有类型都失败，存储为 nil
+                parametersDict[key.stringValue] = nil
+            }
+        }
+        
+        parameters = parametersDict
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(path, forKey: .path)
+        try container.encode(enabled, forKey: .enabled)
+        try container.encode(name, forKey: .name)
+        try container.encode(type, forKey: .type)
+        
+        // 创建动态键容器来编码 parameters
+        var parametersContainer = container.nestedContainer(keyedBy: DynamicKey.self, forKey: .parameters)
+        for (key, value) in parameters {
+            let dynamicKey = DynamicKey(stringValue: key)!
+            if let boolValue = value as? Bool {
+                try parametersContainer.encode(boolValue, forKey: dynamicKey)
+            } else if let intValue = value as? Int {
+                try parametersContainer.encode(intValue, forKey: dynamicKey)
+            } else if let doubleValue = value as? Double {
+                try parametersContainer.encode(doubleValue, forKey: dynamicKey)
+            } else if let stringValue = value as? String {
+                try parametersContainer.encode(stringValue, forKey: dynamicKey)
+            }
+        }
+    }
+}
+
+// MARK: - 动态键
+/// 动态键，用于处理未知键名的编码/解码
+struct DynamicKey: CodingKey {
+    var stringValue: String
+    var intValue: Int?
+    
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+    
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
+    }
+}
+
+// MARK: - 模块状态模型
+/// 模块状态模型，用于表示模块的启用和可用状态
+public struct ModulesState: Codable, Sendable {
+    /// 已启用的模块列表
+    public let enabled: [String]
+    /// 可用的模块列表
+    public let available: [String]
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - enabled: 已启用的模块列表
+    ///   - available: 可用的模块列表
+    public init(enabled: [String], available: [String]) {
+        self.enabled = enabled
+        self.available = available
+    }
+}
+
+// MARK: - 设备响应模型
+/// 设备响应模型，用于表示 /v1/devices 端点的响应数据
+public struct DevicesResponse: Codable, Sendable {
+    /// 设备数组
+    public let devices: [Device]
+    
+    /// 初始化方法
+    /// - Parameter devices: 设备数组
+    public init(devices: [Device]) {
+        self.devices = devices
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case devices
     }
 }
 
@@ -978,6 +933,24 @@ public struct Device: Codable, Sendable {
     }
 }
 
+// MARK: - 事件响应模型
+/// 事件响应模型，用于表示 /v1/events 端点的响应数据
+public struct EventsResponse: Codable, Sendable {
+    /// 事件数组
+    public let events: [Event]
+    
+    /// 初始化方法
+    /// - Parameter events: 事件数组
+    public init(events: [Event]) {
+        self.events = events
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case events
+    }
+}
+
 // MARK: - 事件模型
 /// 事件模型，用于表示事件中心的单个事件
 public struct Event: Codable, Sendable {
@@ -1017,21 +990,27 @@ public struct Event: Codable, Sendable {
     }
 }
 
-// MARK: - 事件响应模型
-/// 事件响应模型，用于表示 /v1/events 端点的响应数据
-public struct EventsResponse: Codable, Sendable {
-    /// 事件数组
-    public let events: [Event]
+// MARK: - 规则响应模型
+/// 规则响应模型，用于表示 /v1/rules 端点的响应数据
+public struct RulesResponse: Codable, Sendable {
+    /// 规则数组
+    public let rules: [String]
+    /// 可用策略数组
+    public let availablePolicies: [String]
     
     /// 初始化方法
-    /// - Parameter events: 事件数组
-    public init(events: [Event]) {
-        self.events = events
+    /// - Parameters:
+    ///   - rules: 规则数组
+    ///   - availablePolicies: 可用策略数组
+    public init(rules: [String], availablePolicies: [String]) {
+        self.rules = rules
+        self.availablePolicies = availablePolicies
     }
     
     /// 编码键值
     enum CodingKeys: String, CodingKey {
-        case events
+        case rules
+        case availablePolicies = "available-policies"
     }
 }
 
@@ -1113,44 +1092,15 @@ public struct TrafficResponse: Codable, Sendable {
     }
 }
 
-// MARK: - 规则响应模型
-/// 规则响应模型，用于表示 /v1/rules 端点的响应数据
-public struct RulesResponse: Codable, Sendable {
-    /// 规则数组
-    public let rules: [String]
-    /// 可用策略数组
-    public let availablePolicies: [String]
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - rules: 规则数组
-    ///   - availablePolicies: 可用策略数组
-    public init(rules: [String], availablePolicies: [String]) {
-        self.rules = rules
-        self.availablePolicies = availablePolicies
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case rules
-        case availablePolicies = "available-policies"
-    }
-}
-
-// MARK: - 设备响应模型
-/// 设备响应模型，用于表示 /v1/devices 端点的响应数据
-public struct DevicesResponse: Codable, Sendable {
-    /// 设备数组
-    public let devices: [Device]
-    
-    /// 初始化方法
-    /// - Parameter devices: 设备数组
-    public init(devices: [Device]) {
-        self.devices = devices
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case devices
-    }
+// MARK: - 日志级别枚举
+/// 日志级别枚举，用于表示不同的日志详细程度
+public enum LogLevel: String, Sendable {
+    /// 详细级别 - 输出所有日志信息
+    case verbose = "verbose"
+    /// 信息级别 - 输出一般信息和警告
+    case info = "info"
+    /// 警告级别 - 只输出警告和错误
+    case warning = "warning"
+    /// 通知级别 - 只输出通知信息
+    case notify = "notify"
 }

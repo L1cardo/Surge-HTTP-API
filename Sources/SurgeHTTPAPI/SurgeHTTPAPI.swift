@@ -127,7 +127,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
     public func testConnectivity() async throws -> Bool {
         do {
-            let _ = try await getOutboundMode()
+            _ = try await getOutboundMode()
             return true
         } catch {
             print("Surge HTTP API 无法连接: \(error.localizedDescription)")
@@ -140,106 +140,93 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     /// 获取 MITM 功能状态
     /// GET /v1/features/mitm
     public func getMITMState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/mitm"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "mitm")
     }
     
     /// 设置 MITM 功能状态
     /// POST /v1/features/mitm
     public func setMITMState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/mitm"
-        let parameters = ["enabled": enabled]
-        let request = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(request)
+        try await setFeatureState(feature: "mitm", enabled: enabled)
     }
     
     /// 获取 Capture 功能状态
     /// GET /v1/features/capture
     public func getCaptureState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/capture"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "capture")
     }
     
     /// 设置 Capture 功能状态
     /// POST /v1/features/capture
     public func setCaptureState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/capture"
-        let parameters = ["enabled": enabled]
-        let request = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(request)
+        try await setFeatureState(feature: "capture", enabled: enabled)
     }
     
     /// 获取 Rewrite 功能状态
     /// GET /v1/features/rewrite
     public func getRewriteState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/rewrite"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "rewrite")
     }
     
     /// 设置 Rewrite 功能状态
     /// POST /v1/features/rewrite
     public func setRewriteState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/rewrite"
-        let parameters = ["enabled": enabled]
-        let request = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(request)
+        try await setFeatureState(feature: "rewrite", enabled: enabled)
     }
     
     /// 获取 Scripting 功能状态
     /// GET /v1/features/scripting
     public func getScriptingState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/scripting"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "scripting")
     }
     
     /// 设置 Scripting 功能状态
     /// POST /v1/features/scripting
     public func setScriptingState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/scripting"
-        let parameters = ["enabled": enabled]
-        let request = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(request)
+        try await setFeatureState(feature: "scripting", enabled: enabled)
     }
     
     /// 获取 System Proxy 功能状态 (仅 Mac)
     /// GET /v1/features/system_proxy
     public func getSystemProxyState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/system_proxy"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "system_proxy")
     }
     
     /// 设置 System Proxy 功能状态 (仅 Mac)
     /// POST /v1/features/system_proxy
     public func setSystemProxyState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/system_proxy"
-        let parameters = ["enabled": enabled]
-        let request = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(request)
+        try await setFeatureState(feature: "system_proxy", enabled: enabled)
     }
     
     /// 获取 Enhanced Mode 功能状态 (仅 Mac)
     /// GET /v1/features/enhanced_mode
     public func getEnhancedModeState() async throws -> Bool {
-        let url = "\(baseURL)/v1/features/enhanced_mode"
-        let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return json["enabled"].boolValue
+        return try await getFeatureState(feature: "enhanced_mode")
     }
     
     /// 设置 Enhanced Mode 功能状态 (仅 Mac)
     /// POST /v1/features/enhanced_mode
     public func setEnhancedModeState(enabled: Bool) async throws {
-        let url = "\(baseURL)/v1/features/enhanced_mode"
+        try await setFeatureState(feature: "enhanced_mode", enabled: enabled)
+    }
+    
+    // MARK: - Private Feature Methods
+    
+    /// 获取功能状态的通用方法
+    /// - Parameter feature: 功能名称
+    /// - Returns: 功能是否启用
+    private func getFeatureState(feature: String) async throws -> Bool {
+        let url = "\(baseURL)/v1/features/\(feature)"
+        let request = self.request(url)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
+    }
+    
+    /// 设置功能状态的通用方法
+    /// - Parameters:
+    ///   - feature: 功能名称
+    ///   - enabled: 是否启用
+    private func setFeatureState(feature: String, enabled: Bool) async throws {
+        let url = "\(baseURL)/v1/features/\(feature)"
         let parameters = ["enabled": enabled]
         let request = self.request(url, method: .post, parameters: parameters)
         try await performVoidRequest(request)
@@ -386,14 +373,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         var testResults: [String: [String]] = [:]
         
         for (groupName, groupData) in json {
-            var policyNames: [String] = []
-            
-            // 遍历组中的每个策略名称
-            for policyName in groupData.arrayValue {
-                policyNames.append(policyName.stringValue)
-            }
-            
-            testResults[groupName] = policyNames
+            testResults[groupName] = groupData.arrayValue.map { $0.stringValue }
         }
         
         return testResults
