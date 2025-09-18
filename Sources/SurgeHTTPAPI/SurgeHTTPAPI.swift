@@ -25,10 +25,10 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         self.baseURL = Defaults[.baseURL]
         self.apiKey = Defaults[.apiKey]
         
-        // 创建自定义 Session 并设置超时时间为 5 秒
+        // 创建自定义 Session 并设置超时时间为 10 秒
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 5.0
-        configuration.timeoutIntervalForResource = 5.0
+        configuration.timeoutIntervalForRequest = 10.0
+        configuration.timeoutIntervalForResource = 10.0
         self.session = Session(configuration: configuration)
     }
     
@@ -109,15 +109,31 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let dataTask = request.serializingData()
         _ = try await dataTask.value
     }
+
+    // MARK: - Connectivity Test (连通性测试)
+
+    /// 测试连通性
+    /// 使用 GET /v1/outbound 测试与 Surge 的连接
+    /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
+    public func testConnectivity() async throws -> Bool {
+        do {
+            let _ = try await getOutboundMode()
+            return true
+        } catch {
+            print("Surge HTTP API 无法连接: \(error.localizedDescription)")
+            return false
+        }
+    }
     
     // MARK: - Toggle capabilities (功能切换)
     
     /// 获取 MITM 功能状态
     /// GET /v1/features/mitm
-    public func getMITMState() async throws -> FeatureState {
+    public func getMITMState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/mitm"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 MITM 功能状态
@@ -131,10 +147,11 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 Capture 功能状态
     /// GET /v1/features/capture
-    public func getCaptureState() async throws -> FeatureState {
+    public func getCaptureState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/capture"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 Capture 功能状态
@@ -148,10 +165,11 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 Rewrite 功能状态
     /// GET /v1/features/rewrite
-    public func getRewriteState() async throws -> FeatureState {
+    public func getRewriteState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/rewrite"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 Rewrite 功能状态
@@ -165,10 +183,11 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 Scripting 功能状态
     /// GET /v1/features/scripting
-    public func getScriptingState() async throws -> FeatureState {
+    public func getScriptingState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/scripting"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 Scripting 功能状态
@@ -182,10 +201,11 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 System Proxy 功能状态 (仅 Mac)
     /// GET /v1/features/system_proxy
-    public func getSystemProxyState() async throws -> FeatureState {
+    public func getSystemProxyState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/system_proxy"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 System Proxy 功能状态 (仅 Mac)
@@ -199,10 +219,11 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 Enhanced Mode 功能状态 (仅 Mac)
     /// GET /v1/features/enhanced_mode
-    public func getEnhancedModeState() async throws -> FeatureState {
+    public func getEnhancedModeState() async throws -> Bool {
         let url = "\(baseURL)/v1/features/enhanced_mode"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["enabled"].boolValue
     }
     
     /// 设置 Enhanced Mode 功能状态 (仅 Mac)
@@ -218,175 +239,302 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取出站模式
     /// GET /v1/outbound
-    public func getOutboundMode() async throws -> OutboundMode {
+    public func getOutboundMode() async throws -> String {
         let url = "\(baseURL)/v1/outbound"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["mode"].stringValue
     }
     
     /// 设置出站模式
     /// POST /v1/outbound
-    public func setOutboundMode(mode: String) async throws -> OutboundMode {
+    public func setOutboundMode(mode: String) async throws {
         let url = "\(baseURL)/v1/outbound"
         let parameters = ["mode": mode]
         let request = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(request)
-    }
-    
-    /// 测试连通性
-    /// 使用 GET /v1/outbound 测试与 Surge 的连接
-    /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
-    public func testConnectivity() async throws -> Bool {
-        let url = "\(baseURL)/v1/outbound"
-        let request = self.request(url)
-        _ = try await performDecodableRequest(request) as OutboundMode
-        return true
+        return try await performVoidRequest(request)
     }
     
     /// 获取全局出站策略
     /// GET /v1/outbound/global
-    public func getGlobalPolicy() async throws -> GlobalPolicy {
+    public func getGlobalPolicy() async throws -> String {
         let url = "\(baseURL)/v1/outbound/global"
         let request = self.request(url)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["policy"].stringValue
     }
     
     /// 设置全局出站策略
     /// POST /v1/outbound/global
-    public func setGlobalPolicy(policy: String) async throws -> GlobalPolicy {
+    public func setGlobalPolicy(policy: String) async throws {
         let url = "\(baseURL)/v1/outbound/global"
         let parameters = ["policy": policy]
         let request = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(request)
+        return try await performVoidRequest(request)
     }
     
     // MARK: - Proxy Policy (代理策略)
     
     /// 列出所有策略
     /// GET /v1/policies
-    public func getPolicies() async throws -> JSON {
+    public func getPolicies() async throws -> PoliciesResponse {
         let url = "\(baseURL)/v1/policies"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        return try await performDecodableRequest(request)
     }
     
     /// 获取策略详情
     /// GET /v1/policies/detail?policy_name=ProxyNameHere
-    public func getPolicyDetail(policyName: String) async throws -> JSON {
+    public func getPolicyDetail(policyName: String) async throws -> String {
         let url = "\(baseURL)/v1/policies/detail"
         let parameters = ["policy_name": policyName]
         let request = self.request(url, parameters: parameters)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        return json[policyName].stringValue
     }
     
     /// 测试策略
     /// POST /v1/policies/test
-    public func testPolicies(request: PolicyTestRequest) async throws -> JSON {
+    public func testPolicies(policyNames: [String], url: String) async throws -> [String: SinglePolicyTestResult] {
         let url = "\(baseURL)/v1/policies/test"
         let parameters: [String: Sendable] = [
-            "policy_names": request.policyNames,
-            "url": request.url
+            "policy_names": policyNames,
+            "url": url
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performJSONRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        let json = try await performJSONRequest(request)
+        
+        // 如果响应为空，返回空字典
+        guard !json.isEmpty else {
+            return [:]
+        }
+        
+        // 解析响应数据
+        var results: [String: SinglePolicyTestResult] = [:]
+        
+        // 遍历 JSON 响应中的所有键值对
+        for (policyName, value) in json {
+            // 直接访问字段值，不使用可选绑定
+            let tfo = value["tfo"].boolValue
+            let tcp = value["tcp"].intValue
+            let receive = value["receive"].intValue
+            let available = value["available"].intValue
+            let roundOneTotal = value["round-one-total"].intValue
+            
+            let singleResult = SinglePolicyTestResult (
+                tfo: tfo,
+                tcp: tcp,
+                receive: receive,
+                available: available,
+                roundOneTotal: roundOneTotal
+            )
+            results[policyName] = singleResult
+        }
+        
+        return results
     }
     
     /// 列出所有策略组及其选项
     /// GET /v1/policy_groups
-    public func getPolicyGroups() async throws -> JSON {
+    public func getPolicyGroups() async throws -> [String: [PolicyGroupItem]] {
         let url = "\(baseURL)/v1/policy_groups"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        
+        // 解析 JSON 响应为策略组数据模型
+        var policyGroups: [String: [PolicyGroupItem]] = [:]
+        
+        for (groupName, groupData) in json {
+            var items: [PolicyGroupItem] = []
+            
+            // 遍历组中的每个策略项
+            for item in groupData.arrayValue {
+                let policyItem = PolicyGroupItem(
+                    isGroup: item["isGroup"].boolValue,
+                    name: item["name"].stringValue,
+                    typeDescription: item["typeDescription"].stringValue,
+                    lineHash: item["lineHash"].stringValue,
+                    enabled: item["enabled"].boolValue
+                )
+                items.append(policyItem)
+            }
+            
+            policyGroups[groupName] = items
+        }
+        
+        return policyGroups
     }
     
-    /// 获取策略组测试结果
+    /// 获取url-test/fallback/load-balance策略组测试结果
     /// GET /v1/policy_groups/test_results
-    public func getPolicyGroupTestResults() async throws -> JSON {
+    public func getPolicyGroupTestResults() async throws -> [String: [String]] {
         let url = "\(baseURL)/v1/policy_groups/test_results"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        
+        // 解析 JSON 响应为策略组测试结果数据模型
+        var testResults: [String: [String]] = [:]
+        
+        for (groupName, groupData) in json {
+            var policyNames: [String] = []
+            
+            // 遍历组中的每个策略名称
+            for policyName in groupData.arrayValue {
+                policyNames.append(policyName.stringValue)
+            }
+            
+            testResults[groupName] = policyNames
+        }
+        
+        return testResults
     }
     
-    /// 获取选择策略组的选项
+    /// 获取选择策略组的所选项
     /// GET /v1/policy_groups/select?group_name=GroupNameHere
-    public func getPolicyGroupSelection(groupName: String) async throws -> PolicyGroupSelection {
+    public func getPolicyGroupSelection(groupName: String) async throws -> String {
         let url = "\(baseURL)/v1/policy_groups/select"
         let parameters = ["group_name": groupName]
         let request = self.request(url, parameters: parameters)
-        return try await performDecodableRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["policy"].stringValue
     }
     
     /// 更改选择策略组的选项
     /// POST /v1/policy_groups/select
-    public func setPolicyGroupSelection(request: PolicyGroupSelectRequest) async throws -> PolicyGroupSelection {
+    public func setPolicyGroupSelection(groupName: String, policy: String) async throws{
         let url = "\(baseURL)/v1/policy_groups/select"
         let parameters = [
-            "group_name": request.groupName,
-            "policy": request.policy
+            "group_name": groupName,
+            "policy": policy
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        return try await performVoidRequest(request)
     }
     
     /// 立即测试策略组
     /// POST /v1/policy_groups/test
-    public func testPolicyGroup(request: PolicyGroupTestRequest) async throws -> PolicyGroupTestResult {
+    public func testPolicyGroup(groupName: String) async throws -> [String] {
         let url = "\(baseURL)/v1/policy_groups/test"
         let parameters = [
-            "group_name": request.groupName
+            "group_name": groupName
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        let json = try await performJSONRequest(request)
+        return json["available"].arrayValue.map { $0.stringValue}
     }
     
     // MARK: - Requests (请求管理)
     
     /// 列出最近的请求
     /// GET /v1/requests/recent
-    public func getRecentRequests() async throws -> JSON {
+    public func getRecentRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/recent"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        return parseRequests(from: json)
     }
-    
-    /// 列出所有活动请求
+
+        /// 列出所有活动请求
     /// GET /v1/requests/active
-    public func getActiveRequests() async throws -> JSON {
+    public func getActiveRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/active"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        return parseRequests(from: json)
     }
     
-    /// 杀死活动请求
+    /// 终止活动请求
     /// POST /v1/requests/kill
-    public func killRequest(request: KillRequest) async throws {
+    public func killRequest(id: Int) async throws {
         let url = "\(baseURL)/v1/requests/kill"
         let parameters = [
-            "id": request.id
+            "id": id
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        try await performVoidRequest(request)
+    }
+    
+    /// 解析请求数据
+    /// - Parameter json: 包含请求数据的JSON对象
+    /// - Returns: 解析后的请求对象数组
+    private func parseRequests(from json: JSON) -> [Request] {
+        var requests: [Request] = []
+        
+        // 遍历每个请求对象并解析
+        for requestJSON in json["requests"].arrayValue {
+            // 解析计时记录
+            var timingRecords: [RequestTimingRecord] = []
+            for timingJSON in requestJSON["timingRecords"].arrayValue {
+                let timingRecord = RequestTimingRecord(
+                    name: timingJSON["name"].stringValue,
+                    duration: timingJSON["duration"].doubleValue,
+                    durationInMillisecond: timingJSON["durationInMillisecond"].intValue
+                )
+                timingRecords.append(timingRecord)
+            }
+            
+            // 创建请求对象
+            let request = Request(
+                id: requestJSON["id"].intValue,
+                remoteAddress: requestJSON["remoteAddress"].stringValue,
+                inMaxSpeed: requestJSON["inMaxSpeed"].intValue,
+                interface: requestJSON["interface"].stringValue,
+                originalPolicyName: requestJSON["originalPolicyName"].stringValue,
+                notes: requestJSON["notes"].arrayValue.map { $0.stringValue },
+                inCurrentSpeed: requestJSON["inCurrentSpeed"].intValue,
+                failed: requestJSON["failed"].boolValue,
+                status: requestJSON["status"].stringValue,
+                outCurrentSpeed: requestJSON["outCurrentSpeed"].intValue,
+                completed: requestJSON["completed"].boolValue,
+                sourcePort: requestJSON["sourcePort"].intValue,
+                completedDate: requestJSON["completedDate"].doubleValue,
+                outBytes: requestJSON["outBytes"].intValue,
+                sourceAddress: requestJSON["sourceAddress"].stringValue,
+                localAddress: requestJSON["localAddress"].stringValue,
+                requestHeader: requestJSON["requestHeader"].stringValue,
+                local: requestJSON["local"].boolValue,
+                policyName: requestJSON["policyName"].stringValue,
+                inBytes: requestJSON["inBytes"].intValue,
+                deviceName: requestJSON["deviceName"].stringValue,
+                replicaDirectoryPath: requestJSON["replicaDirectoryPath"].string,
+                takeoverMode: requestJSON["takeoverMode"].intValue,
+                method: requestJSON["method"].stringValue,
+                replica: requestJSON["replica"].boolValue,
+                pid: requestJSON["pid"].intValue,
+                pathForStatistics: requestJSON["pathForStatistics"].string,
+                rule: requestJSON["rule"].stringValue,
+                startDate: requestJSON["startDate"].doubleValue,
+                streamHasResponseBody: requestJSON["streamHasResponseBody"].boolValue,
+                setupCompletedDate: requestJSON["setupCompletedDate"].doubleValue,
+                url: requestJSON["URL"].stringValue,
+                processPath: requestJSON["processPath"].string,
+                outMaxSpeed: requestJSON["outMaxSpeed"].intValue,
+                modified: requestJSON["modified"].boolValue,
+                responseHeader: requestJSON["responseHeader"].string,
+                rejected: requestJSON["rejected"].boolValue,
+                engineIdentifier: requestJSON["engineIdentifier"].intValue,
+                timingRecords: timingRecords,
+                remoteHost: requestJSON["remoteHost"].stringValue,
+                streamHasRequestBody: requestJSON["streamHasRequestBody"].boolValue,
+                remark: requestJSON["remark"].string,
+                remoteClientPhysicalAddress: requestJSON["remoteClientPhysicalAddress"].string
+            )
+            
+            requests.append(request)
+        }
+        
+        return requests
     }
     
     // MARK: - Profiles (配置文件)
     
     /// 获取当前配置文件内容
     /// GET /v1/profiles/current?sensitive=0
-    public func getCurrentProfile(sensitive: Bool = false) async throws -> String {
+    public func getCurrentProfile(sensitive: Bool = true) async throws -> ProfileResponse {
         let url = "\(baseURL)/v1/profiles/current"
         let parameters = ["sensitive": sensitive ? 1 : 0]
         let request = self.request(url, parameters: parameters)
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            request.responseString { response in
-                switch response.result {
-                case .success(let string):
-                    continuation.resume(returning: string)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+        return try await performDecodableRequest(request)
     }
     
     /// 立即重新加载配置文件
@@ -399,32 +547,38 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 切换到另一个配置文件 (仅 Mac)
     /// POST /v1/profiles/switch
-    public func switchProfile(request: ProfileSwitchRequest) async throws -> SimpleResponse {
+    public func switchProfile(name: String) async throws {
         let url = "\(baseURL)/v1/profiles/switch"
-        let parameters: [String: Sendable] = [
-            "name": request.name
+        let parameters: [String: String] = [
+            "name": name
         ]
         let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(requestObj)
+        return try await performVoidRequest(requestObj)
     }
     
     /// 获取所有可用的配置文件名称 (仅 Mac 4.0.6+)
     /// GET /v1/profiles
-    public func getAvailableProfiles() async throws -> JSON {
+    public func getAvailableProfiles() async throws -> [String] {
         let url = "\(baseURL)/v1/profiles"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["profiles"].arrayValue.map { $0.stringValue }
     }
     
     /// 检查配置文件 (仅 Mac 4.0.6+)
     /// POST /v1/profiles/check
-    public func checkProfile(request: ProfileSwitchRequest) async throws -> SimpleResponse {
+    public func checkProfile(name: String) async throws -> String {
         let url = "\(baseURL)/v1/profiles/check"
-        let parameters: [String: Sendable] = [
-            "name": request.name
+        let parameters: [String: String] = [
+            "name": name
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        let json = try await performJSONRequest(request)
+        if let error = json["error"].string {
+            return error
+        } else {
+            return ""
+        }
     }
     
     // MARK: - DNS
@@ -439,18 +593,19 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取当前 DNS 缓存内容
     /// GET /v1/dns
-    public func getDNSCache() async throws -> JSON {
+    public func getDNSCache() async throws -> DNSCacheResponse {
         let url = "\(baseURL)/v1/dns"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        return try await performDecodableRequest(request)
     }
     
     /// 测试 DNS 延迟
     /// POST /v1/test/dns_delay
-    public func testDNSDelay() async throws -> JSON {
+    public func testDNSDelay() async throws -> Double {
         let url = "\(baseURL)/v1/test/dns_delay"
         let request = self.request(url, method: .post)
-        return try await performJSONRequest(request)
+        let json = try await performJSONRequest(request)
+        return json["delay"].doubleValue
     }
     
     // MARK: - Modules (模块)
@@ -465,21 +620,22 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 启用或禁用模块
     /// POST /v1/modules
-    public func setModule(moduleName: String, enabled: Bool) async throws -> ModulesState {
+    public func setModule(moduleName: String, enabled: Bool) async throws {
         let url = "\(baseURL)/v1/modules"
         let parameters = [moduleName: enabled]
         let request = self.request(url, method: .post, parameters: parameters)
-        return try await performDecodableRequest(request)
+        return try await performVoidRequest(request)
     }
     
     // MARK: - Scripting (脚本)
     
     /// 列出所有脚本
     /// GET /v1/scripting
-    public func getScripts() async throws -> JSON {
+    public func getScripts() async throws -> [Script] {
         let url = "\(baseURL)/v1/scripting"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let response: ScriptsResponse = try await performDecodableRequest(request)
+        return response.scripts
     }
     
     /// 评估脚本

@@ -95,20 +95,39 @@ struct SurgeCompleteUsageExample {
         do {
             // 列出所有策略
             let policies = try await surgeAPI.getPolicies()
-            print("策略列表: \(policies)")
+            print("代理策略列表: \(policies.proxies)")
+            print("策略组列表: \(policies.policyGroups)")
         } catch {
             print("获取策略列表失败: \(error)")
             // 错误处理...
         }
         
         do {
+            // 获取策略详情
+            let policyDetail = try await surgeAPI.getPolicyDetail(policyName: "ProxyNameHere")
+            print("策略名称: \(policyDetail.policyName)")
+            print("策略详情: \(policyDetail.detail)")
+        } catch {
+            print("获取策略详情失败: \(error)")
+            // 错误处理...
+        }
+        
+        do {
             // 测试策略
             let testRequest = PolicyTestRequest(
-                policyNames: ["ProxyA", "ProxyB"], 
+                policyNames: ["🎯直连", "⛔️Reject"], 
                 url: "http://bing.com"
             )
-            let result = try await surgeAPI.testPolicies(request: testRequest)
-            print("策略测试结果: \(result)")
+            let results = try await surgeAPI.testPolicies(request: testRequest)
+            print("策略测试结果:")
+            for (policyName, result) in results {
+                print("策略: \(policyName)")
+                print("  tfo: \(result.tfo)")
+                print("  tcp: \(result.tcp)ms")
+                print("  receive: \(result.receive)ms")
+                print("  available: \(result.available)ms")
+                print("  round-one-total: \(result.roundOneTotal)ms")
+            }
         } catch {
             print("策略测试失败: \(error)")
             // 错误处理...
@@ -128,6 +147,39 @@ struct SurgeCompleteUsageExample {
             print("新策略组选择: \(newSelection.policy)")
         } catch {
             print("策略组操作失败: \(error)")
+            // 错误处理...
+        }
+        
+        do {
+            // 获取所有策略组及其选项
+            let policyGroups = try await surgeAPI.getPolicyGroups()
+            print("策略组列表:")
+            for (groupName, items) in policyGroups.policyGroups {
+                print("  策略组: \(groupName)")
+                for item in items {
+                    print("    - 名称: \(item.name)")
+                    print("      类型: \(item.typeDescription)")
+                    print("      启用: \(item.enabled)")
+                    print("      是策略组: \(item.isGroup)")
+                }
+            }
+        } catch {
+            print("获取策略组列表失败: \(error)")
+            // 错误处理...
+        }
+        
+        do {
+            // 获取策略组测试结果
+            let testResults = try await surgeAPI.getPolicyGroupTestResults()
+            print("策略组测试结果:")
+            for (groupName, policyNames) in testResults.testResults {
+                print("  策略组: \(groupName)")
+                for policyName in policyNames {
+                    print("    - 策略: \(policyName)")
+                }
+            }
+        } catch {
+            print("获取策略组测试结果失败: \(error)")
             // 错误处理...
         }
     }

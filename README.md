@@ -106,7 +106,19 @@ Task {
 Task {
     do {
         let policies = try await surgeClient.getPolicies()
-        print("Policies: \(policies)")
+        print("Proxies: \(policies.proxies)")
+        print("Policy Groups: \(policies.policyGroups)")
+    } catch {
+        print("Error: \(error)")
+    }
+}
+
+// 获取策略详情
+Task {
+    do {
+        let policyDetail = try await surgeClient.getPolicyDetail(policyName: "ProxyNameHere")
+        print("Policy Name: \(policyDetail.policyName)")
+        print("Detail: \(policyDetail.detail)")
     } catch {
         print("Error: \(error)")
     }
@@ -116,11 +128,54 @@ Task {
 Task {
     do {
         let testRequest = PolicyTestRequest(
-            policyNames: ["ProxyA", "ProxyB"], 
+            policyNames: ["🎯直连", "⛔️Reject"], 
             url: "http://bing.com"
         )
-        let result = try await surgeClient.testPolicies(request: testRequest)
-        print("Test result: \(result)")
+        let results = try await surgeClient.testPolicies(request: testRequest)
+        print("Test results:")
+        for (policyName, result) in results {
+            print("Policy: \(policyName)")
+            print("  tfo: \(result.tfo)")
+            print("  tcp: \(result.tcp)ms")
+            print("  receive: \(result.receive)ms")
+            print("  available: \(result.available)ms")
+            print("  round-one-total: \(result.roundOneTotal)ms")
+        }
+    } catch {
+        print("Error: \(error)")
+    }
+}
+
+// 获取策略组及其选项
+Task {
+    do {
+        let policyGroups = try await surgeClient.getPolicyGroups()
+        print("Policy Groups:")
+        for (groupName, items) in policyGroups.policyGroups {
+            print("  Group: \(groupName)")
+            for item in items {
+                print("    - Name: \(item.name)")
+                print("      Type: \(item.typeDescription)")
+                print("      Enabled: \(item.enabled)")
+                print("      Is Group: \(item.isGroup)")
+            }
+        }
+    } catch {
+        print("Error: \(error)")
+    }
+}
+
+// 获取策略组测试结果
+Task {
+    do {
+        let testResults = try await surgeClient.getPolicyGroupTestResults()
+        print("Policy Group Test Results:")
+        for (groupName, policyNames) in testResults.testResults {
+            print("  Group: \(groupName)")
+            for policyName in policyNames {
+                print("    - Policy: \(policyName)")
+            }
+        }
     } catch {
         print("Error: \(error)")
     }
@@ -155,6 +210,82 @@ Task {
 - 最近请求: `GET /v1/requests/recent`
 - 活动请求: `GET /v1/requests/active`
 - 杀死请求: `POST /v1/requests/kill`
+
+### 请求数据模型
+
+新版本引入了完整的请求数据模型，包括：
+
+- `Request`: 表示单个网络请求的详细信息
+- `RequestTimingRecord`: 表示请求处理过程中的各个阶段耗时
+
+使用示例：
+
+```swift
+// 获取最近的请求
+Task {
+    do {
+        let requests = try await surgeClient.getRecentRequests()
+        
+        for request in requests {
+            print("ID: \(request.id)")
+            print("URL: \(request.url)")
+            print("Method: \(request.method)")
+            print("Status: \(request.status)")
+            print("Device: \(request.deviceName)")
+            
+            // 访问计时记录
+            for timing in request.timingRecords {
+                print("  \(timing.name): \(timing.durationInMillisecond)ms")
+            }
+            
+            // 访问注释
+            for note in request.notes {
+                print("  Note: \(note)")
+            }
+        }
+    } catch {
+        print("Error: \(error)")
+    }
+}
+```
+
+### 请求数据模型
+
+新版本引入了完整的请求数据模型，包括：
+
+- `Request`: 表示单个网络请求的详细信息
+- `RequestTimingRecord`: 表示请求处理过程中的各个阶段耗时
+
+使用示例：
+
+```swift
+// 获取最近的请求
+Task {
+    do {
+        let requests = try await surgeClient.getRecentRequests()
+        
+        for request in requests {
+            print("ID: \(request.id)")
+            print("URL: \(request.url)")
+            print("Method: \(request.method)")
+            print("Status: \(request.status)")
+            print("Device: \(request.deviceName)")
+            
+            // 访问计时记录
+            for timing in request.timingRecords {
+                print("  \(timing.name): \(timing.durationInMillisecond)ms")
+            }
+            
+            // 访问注释
+            for note in request.notes {
+                print("  Note: \(note)")
+            }
+        }
+    } catch {
+        print("Error: \(error)")
+    }
+}
+```
 
 ### 配置文件 (仅 Mac 4.0.6+)
 - 当前配置: `GET /v1/profiles/current`
