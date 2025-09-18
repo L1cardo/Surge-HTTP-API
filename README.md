@@ -30,6 +30,7 @@
   - [杂项](#杂项)
 - [数据模型](#数据模型)
 - [要求](#要求)
+- [API 调试开发](#api-调试开发)
 - [许可证](#许可证)
 
 ## 功能特性
@@ -539,6 +540,19 @@ Task {
 - Swift 6.0+
 - Alamofire 5.6+
 - SwiftyJSON 5.0+
+
+## API 调试开发
+
+本项目包含一个 [RapidAPI](https://paw.cloud/)（以前称为 PAW）的 API 调试文件 `SurgeHTTPAPI.paw`，可用于调试和开发 Surge HTTP API。
+
+要使用此功能：
+
+1. 下载并安装 [RapidAPI](https://paw.cloud/) 软件
+2. 克隆本项目到本地
+3. 使用 RapidAPI 打开项目中的 `SurgeHTTPAPI.paw` 文件
+4. 在 RapidAPI 中配置您的 Surge 实例的 URL 和 API Key
+5. 开始调试和测试 API 端点
+
 
 ## Star History
 
