@@ -540,9 +540,15 @@ Task {
 - Alamofire 5.6+
 - SwiftyJSON 5.0+
 
-## Star 趋势图
+## Star History
 
-[![Stargazers over time](https://starchart.cc/L1cardo/Surge-HTTP-API.svg)](https://starchart.cc/L1cardo/Surge-HTTP-API)
+<a href="https://www.star-history.com/#L1cardo/Surge-HTTP-API&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=L1cardo/Surge-HTTP-API&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=L1cardo/Surge-HTTP-API&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=L1cardo/Surge-HTTP-API&type=Date" />
+ </picture>
+</a>
 
 ## 许可证
 
