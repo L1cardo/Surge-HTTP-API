@@ -68,98 +68,17 @@ public struct ModuleToggle: Codable, Sendable {
     }
 }
 
-// MARK: - 日志级别参数模型
-/// 日志级别参数模型，用于更改当前会话的日志级别
-public struct LogLevelRequest: Codable, Sendable {
-    /// 日志级别 (verbose, info, warning, error)
-    public let level: String
-    
-    /// 初始化方法
-    /// - Parameter level: 日志级别
-    public init(level: String) {
-        self.level = level
-    }
-}
-
-// MARK: - 脚本评估参数模型
-/// 脚本评估参数模型，用于评估脚本
-public struct ScriptEvaluateRequest: Codable, Sendable {
-    /// 脚本文本
-    public let scriptText: String
-    /// 模拟类型
-    public let mockType: String?
-    /// 超时时间（秒）
-    public let timeout: Int?
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - scriptText: 脚本文本
-    ///   - mockType: 模拟类型
-    ///   - timeout: 超时时间（秒）
-    public init(scriptText: String, mockType: String? = nil, timeout: Int? = nil) {
-        self.scriptText = scriptText
-        self.mockType = mockType
-        self.timeout = timeout
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case scriptText = "script_text"
-        case mockType = "mock_type"
-        case timeout
-    }
-}
-
-// MARK: - Cron脚本评估参数模型
-/// Cron脚本评估参数模型，用于立即评估 Cron 脚本
-public struct CronScriptEvaluateRequest: Codable, Sendable {
-    /// 脚本名称
-    public let scriptName: String
-    
-    /// 初始化方法
-    /// - Parameter scriptName: 脚本名称
-    public init(scriptName: String) {
-        self.scriptName = scriptName
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case scriptName = "script_name"
-    }
-}
-
-// MARK: - 设备管理参数模型
-/// 设备管理参数模型，用于更新设备属性
-public struct DeviceUpdateRequest: Codable, Sendable {
-    /// 物理地址（MAC地址）
-    public let physicalAddress: String
-    /// 设备名称
-    public let name: String?
-    /// IP地址
-    public let address: String?
-    /// 是否由 Surge 处理
-    public let shouldHandledBySurge: Bool?
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - physicalAddress: 物理地址（MAC地址）
-    ///   - name: 设备名称
-    ///   - address: IP地址
-    ///   - shouldHandledBySurge: 是否由 Surge 处理
-    public init(physicalAddress: String, name: String? = nil, address: String? = nil, shouldHandledBySurge: Bool? = nil) {
-        self.physicalAddress = physicalAddress
-        self.name = name
-        self.address = address
-        self.shouldHandledBySurge = shouldHandledBySurge
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case physicalAddress = "physicalAddress"
-        case name
-        case address
-        case shouldHandledBySurge = "shouldHandledBySurge"
-    }
+// MARK: - 日志级别枚举
+/// 日志级别枚举，用于表示不同的日志详细程度
+public enum LogLevel: String, Sendable {
+    /// 详细级别 - 输出所有日志信息
+    case verbose = "verbose"
+    /// 信息级别 - 输出一般信息和警告
+    case info = "info"
+    /// 警告级别 - 只输出警告和错误
+    case warning = "warning"
+    /// 通知级别 - 只输出通知信息
+    case notify = "notify"
 }
 
 // MARK: - 策略列表响应模型
@@ -263,35 +182,6 @@ public struct PolicyGroupItem: Codable, Sendable {
         case typeDescription = "typeDescription"
         case lineHash = "lineHash"
         case enabled
-    }
-}
-
-// MARK: - 请求计时记录模型
-/// 请求计时记录模型，用于表示请求处理过程中的各个阶段耗时
-public struct RequestTimingRecord: Codable, Sendable {
-    /// 阶段名称
-    public let name: String
-    /// 持续时间（秒）
-    public let duration: Double
-    /// 持续时间（毫秒）
-    public let durationInMillisecond: Int
-    
-    /// 初始化方法
-    /// - Parameters:
-    ///   - name: 阶段名称
-    ///   - duration: 持续时间（秒）
-    ///   - durationInMillisecond: 持续时间（毫秒）
-    public init(name: String, duration: Double, durationInMillisecond: Int) {
-        self.name = name
-        self.duration = duration
-        self.durationInMillisecond = durationInMillisecond
-    }
-    
-    /// 编码键值
-    enum CodingKeys: String, CodingKey {
-        case name
-        case duration
-        case durationInMillisecond = "durationInMillisecond"
     }
 }
 
@@ -570,20 +460,49 @@ public struct ScriptsResponse: Codable, Sendable {
     }
 }
 
+// MARK: - 请求计时记录模型
+/// 请求计时记录模型，用于表示请求处理过程中的各个阶段耗时
+public struct RequestTimingRecord: Codable, Sendable {
+    /// 阶段名称
+    public let name: String
+    /// 持续时间（秒）
+    public let duration: Double
+    /// 持续时间（毫秒）
+    public let durationInMillisecond: Int
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - name: 阶段名称
+    ///   - duration: 持续时间（秒）
+    ///   - durationInMillisecond: 持续时间（毫秒）
+    public init(name: String, duration: Double, durationInMillisecond: Int) {
+        self.name = name
+        self.duration = duration
+        self.durationInMillisecond = durationInMillisecond
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case name
+        case duration
+        case durationInMillisecond
+    }
+}
+
 // MARK: - 请求模型
 /// 请求模型，用于表示单个网络请求的详细信息
 public struct Request: Codable, Sendable {
-    /// 请求ID
+    /// 请求 ID
     public let id: Int
-    /// 远程地址
-    public let remoteAddress: String
+    /// 远程地址（可选）
+    public let remoteAddress: String?
     /// 入站最大速度
     public let inMaxSpeed: Int
-    /// 网络接口
-    public let interface: String
+    /// 网络接口（可选）
+    public let interface: String?
     /// 原始策略名称
     public let originalPolicyName: String
-    /// 注释列表
+    /// 注释数组
     public let notes: [String]
     /// 入站当前速度
     public let inCurrentSpeed: Int
@@ -597,119 +516,69 @@ public struct Request: Codable, Sendable {
     public let completed: Bool
     /// 源端口
     public let sourcePort: Int
-    /// 完成时间戳
+    /// 完成日期时间戳
     public let completedDate: Double
     /// 出站字节数
     public let outBytes: Int
     /// 源地址
     public let sourceAddress: String
-    /// 本地地址
-    public let localAddress: String
-    /// 请求头
-    public let requestHeader: String
+    /// 本地地址（可选）
+    public let localAddress: String?
     /// 是否为本地请求
     public let local: Bool
+    /// 远程客户端物理地址（可选）
+    public let remoteClientPhysicalAddress: String?
     /// 策略名称
     public let policyName: String
     /// 入站字节数
     public let inBytes: Int
     /// 设备名称
-    public let deviceName: String
-    /// 副本目录路径
-    public let replicaDirectoryPath: String?
+    public let deviceName: String?
     /// 接管模式
     public let takeoverMode: Int
-    /// 请求方法
+    /// 方法 (TCP/UDP等)
     public let method: String
-    /// 是否有副本
+    /// 是否为副本
     public let replica: Bool
-    /// 进程ID
+    /// 进程 ID
     public let pid: Int
-    /// 统计路径
+    /// 统计路径（可选）
     public let pathForStatistics: String?
+    /// 备注（可选）
+    public let remark: String?
     /// 规则
     public let rule: String
-    /// 开始时间戳
+    /// 开始日期时间戳
     public let startDate: Double
     /// 是否有响应体
     public let streamHasResponseBody: Bool
-    /// 设置完成时间戳
+    /// 设置完成日期时间戳
     public let setupCompletedDate: Double
     /// URL
     public let url: String
-    /// 进程路径
+    /// 进程路径（可选）
     public let processPath: String?
     /// 出站最大速度
     public let outMaxSpeed: Int
     /// 是否已修改
     public let modified: Bool
-    /// 响应头
-    public let responseHeader: String?
-    /// 是否被拒绝
-    public let rejected: Bool
     /// 引擎标识符
     public let engineIdentifier: Int
-    /// 计时记录列表
+    /// 是否被拒绝
+    public let rejected: Bool
+    /// 计时记录数组
     public let timingRecords: [RequestTimingRecord]
     /// 远程主机
     public let remoteHost: String
     /// 是否有请求体
     public let streamHasRequestBody: Bool
-    /// 备注（仅在某些情况下存在）
-    public let remark: String?
-    /// 远程客户端物理地址（仅在某些情况下存在）
-    public let remoteClientPhysicalAddress: String?
     
     /// 初始化方法
-    /// - Parameters:
-    ///   - id: 请求ID
-    ///   - remoteAddress: 远程地址
-    ///   - inMaxSpeed: 入站最大速度
-    ///   - interface: 网络接口
-    ///   - originalPolicyName: 原始策略名称
-    ///   - notes: 注释列表
-    ///   - inCurrentSpeed: 入站当前速度
-    ///   - failed: 是否失败
-    ///   - status: 状态
-    ///   - outCurrentSpeed: 出站当前速度
-    ///   - completed: 是否完成
-    ///   - sourcePort: 源端口
-    ///   - completedDate: 完成时间戳
-    ///   - outBytes: 出站字节数
-    ///   - sourceAddress: 源地址
-    ///   - localAddress: 本地地址
-    ///   - requestHeader: 请求头
-    ///   - local: 是否为本地请求
-    ///   - policyName: 策略名称
-    ///   - inBytes: 入站字节数
-    ///   - deviceName: 设备名称
-    ///   - replicaDirectoryPath: 副本目录路径
-    ///   - takeoverMode: 接管模式
-    ///   - method: 请求方法
-    ///   - replica: 是否有副本
-    ///   - pid: 进程ID
-    ///   - pathForStatistics: 统计路径
-    ///   - rule: 规则
-    ///   - startDate: 开始时间戳
-    ///   - streamHasResponseBody: 是否有响应体
-    ///   - setupCompletedDate: 设置完成时间戳
-    ///   - url: URL
-    ///   - processPath: 进程路径
-    ///   - outMaxSpeed: 出站最大速度
-    ///   - modified: 是否已修改
-    ///   - responseHeader: 响应头
-    ///   - rejected: 是否被拒绝
-    ///   - engineIdentifier: 引擎标识符
-    ///   - timingRecords: 计时记录列表
-    ///   - remoteHost: 远程主机
-    ///   - streamHasRequestBody: 是否有请求体
-    ///   - remark: 备注
-    ///   - remoteClientPhysicalAddress: 远程客户端物理地址
     public init(
         id: Int,
-        remoteAddress: String,
+        remoteAddress: String? = nil,
         inMaxSpeed: Int,
-        interface: String,
+        interface: String? = nil,
         originalPolicyName: String,
         notes: [String],
         inCurrentSpeed: Int,
@@ -721,34 +590,31 @@ public struct Request: Codable, Sendable {
         completedDate: Double,
         outBytes: Int,
         sourceAddress: String,
-        localAddress: String,
-        requestHeader: String,
+        localAddress: String? = nil,
         local: Bool,
+        remoteClientPhysicalAddress: String? = nil,
         policyName: String,
         inBytes: Int,
-        deviceName: String,
-        replicaDirectoryPath: String?,
+        deviceName: String? = nil,
         takeoverMode: Int,
         method: String,
         replica: Bool,
         pid: Int,
-        pathForStatistics: String?,
+        pathForStatistics: String? = nil,
+        remark: String? = nil,
         rule: String,
         startDate: Double,
         streamHasResponseBody: Bool,
         setupCompletedDate: Double,
         url: String,
-        processPath: String?,
+        processPath: String? = nil,
         outMaxSpeed: Int,
         modified: Bool,
-        responseHeader: String?,
-        rejected: Bool,
         engineIdentifier: Int,
+        rejected: Bool,
         timingRecords: [RequestTimingRecord],
         remoteHost: String,
-        streamHasRequestBody: Bool,
-        remark: String? = nil,
-        remoteClientPhysicalAddress: String? = nil
+        streamHasRequestBody: Bool
     ) {
         self.id = id
         self.remoteAddress = remoteAddress
@@ -766,17 +632,17 @@ public struct Request: Codable, Sendable {
         self.outBytes = outBytes
         self.sourceAddress = sourceAddress
         self.localAddress = localAddress
-        self.requestHeader = requestHeader
         self.local = local
+        self.remoteClientPhysicalAddress = remoteClientPhysicalAddress
         self.policyName = policyName
         self.inBytes = inBytes
         self.deviceName = deviceName
-        self.replicaDirectoryPath = replicaDirectoryPath
         self.takeoverMode = takeoverMode
         self.method = method
         self.replica = replica
         self.pid = pid
         self.pathForStatistics = pathForStatistics
+        self.remark = remark
         self.rule = rule
         self.startDate = startDate
         self.streamHasResponseBody = streamHasResponseBody
@@ -785,60 +651,506 @@ public struct Request: Codable, Sendable {
         self.processPath = processPath
         self.outMaxSpeed = outMaxSpeed
         self.modified = modified
-        self.responseHeader = responseHeader
-        self.rejected = rejected
         self.engineIdentifier = engineIdentifier
+        self.rejected = rejected
         self.timingRecords = timingRecords
         self.remoteHost = remoteHost
         self.streamHasRequestBody = streamHasRequestBody
-        self.remark = remark
-        self.remoteClientPhysicalAddress = remoteClientPhysicalAddress
     }
     
     /// 编码键值
     enum CodingKeys: String, CodingKey {
         case id
-        case remoteAddress = "remoteAddress"
-        case inMaxSpeed = "inMaxSpeed"
+        case remoteAddress
+        case inMaxSpeed
         case interface
-        case originalPolicyName = "originalPolicyName"
+        case originalPolicyName
         case notes
-        case inCurrentSpeed = "inCurrentSpeed"
+        case inCurrentSpeed
         case failed
         case status
-        case outCurrentSpeed = "outCurrentSpeed"
+        case outCurrentSpeed
         case completed
-        case sourcePort = "sourcePort"
-        case completedDate = "completedDate"
-        case outBytes = "outBytes"
-        case sourceAddress = "sourceAddress"
-        case localAddress = "localAddress"
-        case requestHeader = "requestHeader"
+        case sourcePort
+        case completedDate
+        case outBytes
+        case sourceAddress
+        case localAddress
         case local
-        case policyName = "policyName"
-        case inBytes = "inBytes"
-        case deviceName = "deviceName"
-        case replicaDirectoryPath = "replicaDirectoryPath"
-        case takeoverMode = "takeoverMode"
+        case remoteClientPhysicalAddress
+        case policyName
+        case inBytes
+        case deviceName
+        case takeoverMode
         case method
         case replica
         case pid
-        case pathForStatistics = "pathForStatistics"
-        case rule
-        case startDate = "startDate"
-        case streamHasResponseBody = "streamHasResponseBody"
-        case setupCompletedDate = "setupCompletedDate"
-        case url = "URL"
-        case processPath = "processPath"
-        case outMaxSpeed = "outMaxSpeed"
-        case modified
-        case responseHeader = "responseHeader"
-        case rejected
-        case engineIdentifier = "engineIdentifier"
-        case timingRecords = "timingRecords"
-        case remoteHost = "remoteHost"
-        case streamHasRequestBody = "streamHasRequestBody"
+        case pathForStatistics
         case remark
-        case remoteClientPhysicalAddress = "remoteClientPhysicalAddress"
+        case rule
+        case startDate
+        case streamHasResponseBody
+        case setupCompletedDate
+        case url = "URL"
+        case processPath
+        case outMaxSpeed
+        case modified
+        case engineIdentifier
+        case rejected
+        case timingRecords
+        case remoteHost
+        case streamHasRequestBody
+    }
+}
+
+// MARK: - 最近请求响应模型
+/// 最近请求响应模型，用于表示 /v1/requests/recent 端点的响应数据
+public struct RequestsResponse: Codable, Sendable {
+    /// 请求数组
+    public let requests: [Request]
+    
+    /// 初始化方法
+    /// - Parameter requests: 请求数组
+    public init(requests: [Request]) {
+        self.requests = requests
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case requests
+    }
+}
+
+// MARK: - 字节统计模型
+/// 字节统计模型，用于表示设备的流量统计信息
+public struct BytesStat: Codable, Sendable {
+    /// 5分钟内字节数
+    public let m5: Int
+    /// 15分钟内字节数
+    public let m15: Int
+    /// 1小时内字节数
+    public let m60: Int
+    /// 6小时内字节数
+    public let h6: Int
+    /// 12小时内字节数
+    public let h12: Int
+    /// 24小时内字节数
+    public let h24: Int
+    /// 今天字节数
+    public let today: Int
+    /// 本月字节数
+    public let thisMonth: Int
+    /// 上月字节数
+    public let lastMonth: Int
+    /// 总字节数
+    public let total: Int
+    
+    /// 初始化方法
+    public init(
+        m5: Int,
+        m15: Int,
+        m60: Int,
+        h6: Int,
+        h12: Int,
+        h24: Int,
+        today: Int,
+        thisMonth: Int,
+        lastMonth: Int,
+        total: Int
+    ) {
+        self.m5 = m5
+        self.m15 = m15
+        self.m60 = m60
+        self.h6 = h6
+        self.h12 = h12
+        self.h24 = h24
+        self.today = today
+        self.thisMonth = thisMonth
+        self.lastMonth = lastMonth
+        self.total = total
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case m5
+        case m15
+        case m60
+        case h6
+        case h12
+        case h24
+        case today
+        case thisMonth
+        case lastMonth
+        case total
+    }
+}
+
+// MARK: - DHCP 设备模型
+/// DHCP 设备模型，用于表示 DHCP 设备信息
+public struct DHCPDevice: Codable, Sendable {
+    /// 是否应由 Surge 处理
+    public let shouldHandledBySurge: Bool
+    /// 当前 IP 地址
+    public let currentIP: String?
+    /// 物理地址（MAC地址）
+    public let physicalAddress: String?
+    /// 是否由 Surge 处理
+    public let handledBySurge: Bool
+    /// 显示名称
+    public let displayName: String?
+    /// 是否等待重新连接
+    public let waitingToReconnect: Bool
+    /// DNS 名称
+    public let dnsName: String?
+    /// 图标
+    public let icon: String?
+    
+    /// 初始化方法
+    public init(
+        shouldHandledBySurge: Bool,
+        currentIP: String? = nil,
+        physicalAddress: String? = nil,
+        handledBySurge: Bool,
+        displayName: String? = nil,
+        waitingToReconnect: Bool,
+        dnsName: String? = nil,
+        icon: String? = nil
+    ) {
+        self.shouldHandledBySurge = shouldHandledBySurge
+        self.currentIP = currentIP
+        self.physicalAddress = physicalAddress
+        self.handledBySurge = handledBySurge
+        self.displayName = displayName
+        self.waitingToReconnect = waitingToReconnect
+        self.dnsName = dnsName
+        self.icon = icon
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case shouldHandledBySurge
+        case currentIP
+        case physicalAddress
+        case handledBySurge
+        case displayName
+        case waitingToReconnect
+        case dnsName
+        case icon
+    }
+}
+
+// MARK: - 设备模型
+/// 设备模型，用于表示网络中的设备信息
+public struct Device: Codable, Sendable {
+    /// DHCP 最后分配的 IP 地址
+    public let dhcpLastIP: String?
+    /// 显示的 IP 地址
+    public let displayIPAddress: String
+    /// 总字节数
+    public let totalBytes: Int
+    /// DHCP 网关是否启用
+    public let dhcpGatewayEnabled: Bool
+    /// 标识符（可能是 IP 地址或 MAC 地址）
+    public let identifier: String
+    /// 单个连接流量最高的主机
+    public let topHostBySingleConnectionTraffic: String?
+    /// 是否有 TCP 连接
+    public let hasTCPConnection: Bool
+    /// 入站字节统计
+    public let inBytesStat: BytesStat
+    /// 出站字节数
+    public let outBytes: Int
+    /// DHCP 图标
+    public let dhcpIcon: String?
+    /// 入站字节数
+    public let inBytes: Int
+    /// 设备名称
+    public let name: String
+    /// 当前入站速度
+    public let currentInSpeed: Int
+    /// 物理地址（MAC地址）
+    public let physicalAddress: String?
+    /// 当前出站速度
+    public let currentOutSpeed: Int
+    /// 活动连接数
+    public let activeConnections: Int
+    /// 厂商信息
+    public let vendor: String?
+    /// 出站字节统计
+    public let outBytesStat: BytesStat
+    /// DNS 名称
+    public let dnsName: String?
+    /// DHCP 是否等待重新连接
+    public let dhcpWaitingToReconnect: Bool
+    /// 总连接数
+    public let totalConnections: Int
+    /// 当前速度
+    public let currentSpeed: Int
+    /// DHCP 设备信息
+    public let dhcpDevice: DHCPDevice?
+    /// DHCP 最后出现时间戳
+    public let dhcpLastSeenTimestamp: Int
+    /// 是否有代理连接
+    public let hasProxyConnection: Bool
+    
+    /// 初始化方法
+    public init(
+        dhcpLastIP: String? = nil,
+        displayIPAddress: String,
+        totalBytes: Int,
+        dhcpGatewayEnabled: Bool,
+        identifier: String,
+        topHostBySingleConnectionTraffic: String? = nil,
+        hasTCPConnection: Bool,
+        inBytesStat: BytesStat,
+        outBytes: Int,
+        dhcpIcon: String? = nil,
+        inBytes: Int,
+        name: String,
+        currentInSpeed: Int,
+        physicalAddress: String? = nil,
+        currentOutSpeed: Int,
+        activeConnections: Int,
+        vendor: String? = nil,
+        outBytesStat: BytesStat,
+        dnsName: String? = nil,
+        dhcpWaitingToReconnect: Bool,
+        totalConnections: Int,
+        currentSpeed: Int,
+        dhcpDevice: DHCPDevice? = nil,
+        dhcpLastSeenTimestamp: Int,
+        hasProxyConnection: Bool
+    ) {
+        self.dhcpLastIP = dhcpLastIP
+        self.displayIPAddress = displayIPAddress
+        self.totalBytes = totalBytes
+        self.dhcpGatewayEnabled = dhcpGatewayEnabled
+        self.identifier = identifier
+        self.topHostBySingleConnectionTraffic = topHostBySingleConnectionTraffic
+        self.hasTCPConnection = hasTCPConnection
+        self.inBytesStat = inBytesStat
+        self.outBytes = outBytes
+        self.dhcpIcon = dhcpIcon
+        self.inBytes = inBytes
+        self.name = name
+        self.currentInSpeed = currentInSpeed
+        self.physicalAddress = physicalAddress
+        self.currentOutSpeed = currentOutSpeed
+        self.activeConnections = activeConnections
+        self.vendor = vendor
+        self.outBytesStat = outBytesStat
+        self.dnsName = dnsName
+        self.dhcpWaitingToReconnect = dhcpWaitingToReconnect
+        self.totalConnections = totalConnections
+        self.currentSpeed = currentSpeed
+        self.dhcpDevice = dhcpDevice
+        self.dhcpLastSeenTimestamp = dhcpLastSeenTimestamp
+        self.hasProxyConnection = hasProxyConnection
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case dhcpLastIP
+        case displayIPAddress
+        case totalBytes
+        case dhcpGatewayEnabled
+        case identifier
+        case topHostBySingleConnectionTraffic
+        case hasTCPConnection
+        case inBytesStat
+        case outBytes
+        case dhcpIcon
+        case inBytes
+        case name
+        case currentInSpeed
+        case physicalAddress
+        case currentOutSpeed
+        case activeConnections
+        case vendor
+        case outBytesStat
+        case dnsName
+        case dhcpWaitingToReconnect
+        case totalConnections
+        case currentSpeed
+        case dhcpDevice
+        case dhcpLastSeenTimestamp
+        case hasProxyConnection
+    }
+}
+
+// MARK: - 事件模型
+/// 事件模型，用于表示事件中心的单个事件
+public struct Event: Codable, Sendable {
+    /// 事件标识符
+    public let identifier: String
+    /// 事件日期
+    public let date: String
+    /// 事件类型
+    public let type: Int
+    /// 是否允许关闭
+    public let allowDismiss: Bool
+    /// 事件内容
+    public let content: String
+    
+    /// 初始化方法
+    public init(
+        identifier: String,
+        date: String,
+        type: Int,
+        allowDismiss: Bool,
+        content: String
+    ) {
+        self.identifier = identifier
+        self.date = date
+        self.type = type
+        self.allowDismiss = allowDismiss
+        self.content = content
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case identifier
+        case date
+        case type
+        case allowDismiss
+        case content
+    }
+}
+
+// MARK: - 事件响应模型
+/// 事件响应模型，用于表示 /v1/events 端点的响应数据
+public struct EventsResponse: Codable, Sendable {
+    /// 事件数组
+    public let events: [Event]
+    
+    /// 初始化方法
+    /// - Parameter events: 事件数组
+    public init(events: [Event]) {
+        self.events = events
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case events
+    }
+}
+
+// MARK: - 流量统计模型
+/// 流量统计模型，用于表示单个连接器或接口的流量信息
+public struct TrafficStat: Codable, Sendable {
+    /// 当前入站速度
+    public let inCurrentSpeed: Int
+    /// 当前出站速度
+    public let outCurrentSpeed: Int
+    /// 入站总字节数
+    public let `in`: Int
+    /// 出站总字节数
+    public let out: Int
+    /// 入站最大速度
+    public let inMaxSpeed: Int
+    /// 出站最大速度
+    public let outMaxSpeed: Int
+    /// 行哈希值（仅连接器）
+    public let lineHash: String?
+    
+    /// 初始化方法
+    public init(
+        inCurrentSpeed: Int,
+        outCurrentSpeed: Int,
+        in: Int,
+        out: Int,
+        inMaxSpeed: Int,
+        outMaxSpeed: Int,
+        lineHash: String? = nil
+    ) {
+        self.inCurrentSpeed = inCurrentSpeed
+        self.outCurrentSpeed = outCurrentSpeed
+        self.`in` = `in`
+        self.out = out
+        self.inMaxSpeed = inMaxSpeed
+        self.outMaxSpeed = outMaxSpeed
+        self.lineHash = lineHash
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case inCurrentSpeed
+        case outCurrentSpeed
+        case `in` = "in"
+        case out
+        case inMaxSpeed
+        case outMaxSpeed
+        case lineHash
+    }
+}
+
+// MARK: - 流量响应模型
+/// 流量响应模型，用于表示 /v1/traffic 端点的响应数据
+public struct TrafficResponse: Codable, Sendable {
+    /// 连接器流量统计字典
+    public let connector: [String: TrafficStat]
+    /// 开始时间戳
+    public let startTime: Double
+    /// 网络接口流量统计字典
+    public let `interface`: [String: TrafficStat]
+    
+    /// 初始化方法
+    public init(
+        connector: [String: TrafficStat],
+        startTime: Double,
+        interface: [String: TrafficStat]
+    ) {
+        self.connector = connector
+        self.startTime = startTime
+        self.`interface` = `interface`
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case connector
+        case startTime
+        case interface
+    }
+}
+
+// MARK: - 规则响应模型
+/// 规则响应模型，用于表示 /v1/rules 端点的响应数据
+public struct RulesResponse: Codable, Sendable {
+    /// 规则数组
+    public let rules: [String]
+    /// 可用策略数组
+    public let availablePolicies: [String]
+    
+    /// 初始化方法
+    /// - Parameters:
+    ///   - rules: 规则数组
+    ///   - availablePolicies: 可用策略数组
+    public init(rules: [String], availablePolicies: [String]) {
+        self.rules = rules
+        self.availablePolicies = availablePolicies
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case rules
+        case availablePolicies = "available-policies"
+    }
+}
+
+// MARK: - 设备响应模型
+/// 设备响应模型，用于表示 /v1/devices 端点的响应数据
+public struct DevicesResponse: Codable, Sendable {
+    /// 设备数组
+    public let devices: [Device]
+    
+    /// 初始化方法
+    /// - Parameter devices: 设备数组
+    public init(devices: [Device]) {
+        self.devices = devices
+    }
+    
+    /// 编码键值
+    enum CodingKeys: String, CodingKey {
+        case devices
     }
 }

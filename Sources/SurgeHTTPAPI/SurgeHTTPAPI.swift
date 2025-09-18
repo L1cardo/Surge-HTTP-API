@@ -110,6 +110,16 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         _ = try await dataTask.value
     }
 
+    /// 执行请求并返回二进制数据响应
+    ///
+    /// - Parameter request: 要执行的 DataRequest 对象
+    /// - Returns: 响应的二进制数据
+    /// - Throws: 网络错误
+    private func performDataRequest(_ request: DataRequest) async throws -> Data {
+        let dataTask = request.serializingData()
+        return try await dataTask.value
+    }
+
     // MARK: - Connectivity Test (连通性测试)
 
     /// 测试连通性
@@ -430,17 +440,17 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     public func getRecentRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/recent"
         let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return parseRequests(from: json)
+        let response: RequestsResponse =  try await performDecodableRequest(request)
+        return response.requests
     }
 
-        /// 列出所有活动请求
+    /// 列出所有活动请求
     /// GET /v1/requests/active
     public func getActiveRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/active"
         let request = self.request(url)
-        let json = try await performJSONRequest(request)
-        return parseRequests(from: json)
+        let response: RequestsResponse =  try await performDecodableRequest(request)
+        return response.requests
     }
     
     /// 终止活动请求
@@ -452,78 +462,6 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         ]
         let request = self.request(url, method: .post, parameters: parameters)
         try await performVoidRequest(request)
-    }
-    
-    /// 解析请求数据
-    /// - Parameter json: 包含请求数据的JSON对象
-    /// - Returns: 解析后的请求对象数组
-    private func parseRequests(from json: JSON) -> [Request] {
-        var requests: [Request] = []
-        
-        // 遍历每个请求对象并解析
-        for requestJSON in json["requests"].arrayValue {
-            // 解析计时记录
-            var timingRecords: [RequestTimingRecord] = []
-            for timingJSON in requestJSON["timingRecords"].arrayValue {
-                let timingRecord = RequestTimingRecord(
-                    name: timingJSON["name"].stringValue,
-                    duration: timingJSON["duration"].doubleValue,
-                    durationInMillisecond: timingJSON["durationInMillisecond"].intValue
-                )
-                timingRecords.append(timingRecord)
-            }
-            
-            // 创建请求对象
-            let request = Request(
-                id: requestJSON["id"].intValue,
-                remoteAddress: requestJSON["remoteAddress"].stringValue,
-                inMaxSpeed: requestJSON["inMaxSpeed"].intValue,
-                interface: requestJSON["interface"].stringValue,
-                originalPolicyName: requestJSON["originalPolicyName"].stringValue,
-                notes: requestJSON["notes"].arrayValue.map { $0.stringValue },
-                inCurrentSpeed: requestJSON["inCurrentSpeed"].intValue,
-                failed: requestJSON["failed"].boolValue,
-                status: requestJSON["status"].stringValue,
-                outCurrentSpeed: requestJSON["outCurrentSpeed"].intValue,
-                completed: requestJSON["completed"].boolValue,
-                sourcePort: requestJSON["sourcePort"].intValue,
-                completedDate: requestJSON["completedDate"].doubleValue,
-                outBytes: requestJSON["outBytes"].intValue,
-                sourceAddress: requestJSON["sourceAddress"].stringValue,
-                localAddress: requestJSON["localAddress"].stringValue,
-                requestHeader: requestJSON["requestHeader"].stringValue,
-                local: requestJSON["local"].boolValue,
-                policyName: requestJSON["policyName"].stringValue,
-                inBytes: requestJSON["inBytes"].intValue,
-                deviceName: requestJSON["deviceName"].stringValue,
-                replicaDirectoryPath: requestJSON["replicaDirectoryPath"].string,
-                takeoverMode: requestJSON["takeoverMode"].intValue,
-                method: requestJSON["method"].stringValue,
-                replica: requestJSON["replica"].boolValue,
-                pid: requestJSON["pid"].intValue,
-                pathForStatistics: requestJSON["pathForStatistics"].string,
-                rule: requestJSON["rule"].stringValue,
-                startDate: requestJSON["startDate"].doubleValue,
-                streamHasResponseBody: requestJSON["streamHasResponseBody"].boolValue,
-                setupCompletedDate: requestJSON["setupCompletedDate"].doubleValue,
-                url: requestJSON["URL"].stringValue,
-                processPath: requestJSON["processPath"].string,
-                outMaxSpeed: requestJSON["outMaxSpeed"].intValue,
-                modified: requestJSON["modified"].boolValue,
-                responseHeader: requestJSON["responseHeader"].string,
-                rejected: requestJSON["rejected"].boolValue,
-                engineIdentifier: requestJSON["engineIdentifier"].intValue,
-                timingRecords: timingRecords,
-                remoteHost: requestJSON["remoteHost"].stringValue,
-                streamHasRequestBody: requestJSON["streamHasRequestBody"].boolValue,
-                remark: requestJSON["remark"].string,
-                remoteClientPhysicalAddress: requestJSON["remoteClientPhysicalAddress"].string
-            )
-            
-            requests.append(request)
-        }
-        
-        return requests
     }
     
     // MARK: - Profiles (配置文件)
@@ -574,11 +512,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         ]
         let request = self.request(url, method: .post, parameters: parameters)
         let json = try await performJSONRequest(request)
-        if let error = json["error"].string {
-            return error
-        } else {
-            return ""
-        }
+        return json["error"].string ?? ""
     }
     
     // MARK: - DNS
@@ -638,88 +572,76 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         return response.scripts
     }
     
-    /// 评估脚本
+    /// 执行脚本
     /// POST /v1/scripting/evaluate
-    public func evaluateScript(request: ScriptEvaluateRequest) async throws -> JSON {
+    public func evaluateScript(scriptText: String, mockType: String, timeout: Double) async throws -> String {
         let url = "\(baseURL)/v1/scripting/evaluate"
-        var parameters: [String: Sendable] = [
-            "script_text": request.scriptText
+        let parameters: [String: Sendable] = [
+            "script_text": scriptText,
+            "mock_type": mockType,
+            "timeout": timeout
         ]
-        
-        if let mockType = request.mockType {
-            parameters["mock_type"] = mockType
-        }
-        
-        if let timeout = request.timeout {
-            parameters["timeout"] = timeout
-        }
-        
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performJSONRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        let response =  try await performJSONRequest(request)
+        return response["output"].string ?? ""
     }
     
-    /// 立即评估 Cron 脚本
+    /// 立即执行 Cron 脚本
     /// POST /v1/scripting/cron/evaluate
-    public func evaluateCronScript(request: CronScriptEvaluateRequest) async throws -> JSON {
+    public func evaluateCronScript(scriptName: String) async throws -> String {
         let url = "\(baseURL)/v1/scripting/cron/evaluate"
-        let parameters: [String: Sendable] = [
-            "script_name": request.scriptName
+        let parameters: [String: String] = [
+            "script_name": scriptName
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performJSONRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        let response =  try await performJSONRequest(request)
+        return response["output"].string ?? ""
     }
     
     // MARK: - Device Management (设备管理) (仅 Mac 4.0.6+)
     
     /// 获取当前活动和保存的设备列表
     /// GET /v1/devices
-    public func getDevices() async throws -> JSON {
+    public func getDevices() async throws -> [Device] {
         let url = "\(baseURL)/v1/devices"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let response: DevicesResponse =  try await performDecodableRequest(request)
+        return response.devices
     }
-    
-    /// 获取设备图标
-    /// GET /v1/devices/icon?id={iconID}
-    public func getDeviceIcon(iconID: String) async throws -> Data {
-        let url = "\(baseURL)/v1/devices/icon"
-        let parameters = ["id": iconID]
-        let request = self.request(url, parameters: parameters)
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            request.responseData { response in
-                switch response.result {
-                case .success(let data):
-                    continuation.resume(returning: data)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
+
+
+    // Todo: 无法获取，可能 Surge API 有所改变
+    // /// 获取设备图标
+    // /// GET /v1/devices/icon?id={iconID}
+    // public func getDeviceIcon(iconID: String) async throws -> Data {
+    //     let url = "\(baseURL)/v1/devices/icon"
+    //     let parameters = ["id": iconID]
+    //     let request = self.request(url, parameters: parameters)
+    //     let response: DevicesResponse =  try await performDecodableRequest(request)
+    //     return response
+    // }
     
     /// 更改设备属性
     /// POST /v1/devices
-    public func updateDevice(request: DeviceUpdateRequest) async throws -> JSON {
+    public func updateDevice(physicalAddress: String, name: String? = nil, address: String? = nil, shouldHandledBySurge: Bool? = nil) async throws -> String {
         let url = "\(baseURL)/v1/devices"
         var parameters: [String: Sendable] = [
-            "physicalAddress": request.physicalAddress
+            "physicalAddress": physicalAddress
         ]
-        
-        if let name = request.name {
+
+        if let name = name {
             parameters["name"] = name
         }
-        
-        if let address = request.address {
+        if let address = address {
             parameters["address"] = address
         }
-        
-        if let shouldHandledBySurge = request.shouldHandledBySurge {
+        if let shouldHandledBySurge = shouldHandledBySurge {
             parameters["shouldHandledBySurge"] = shouldHandledBySurge
         }
-        
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performJSONRequest(requestObj)
+
+        let request = self.request(url, method: .post, parameters: parameters)
+        let response =  try await performJSONRequest(request)
+        return response["error"].string ?? ""
     }
     
     // MARK: - Misc (杂项)
@@ -734,37 +656,39 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取事件中心内容
     /// GET /v1/events
-    public func getEvents() async throws -> JSON {
+    public func getEvents() async throws -> [Event] {
         let url = "\(baseURL)/v1/events"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        let response: EventsResponse =  try await performDecodableRequest(request)
+        return response.events
     }
     
     /// 获取规则列表
     /// GET /v1/rules
-    public func getRules() async throws -> JSON {
+    public func getRules() async throws -> RulesResponse {
         let url = "\(baseURL)/v1/rules"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        return try await performDecodableRequest(request)
     }
     
     /// 获取流量信息
     /// GET /v1/traffic
-    public func getTraffic() async throws -> JSON {
+    public func getTraffic() async throws -> TrafficResponse {
         let url = "\(baseURL)/v1/traffic"
         let request = self.request(url)
-        return try await performJSONRequest(request)
+        return try await performDecodableRequest(request)
     }
     
     /// 更改当前会话的日志级别
     /// POST /v1/log/level
-    public func setLogLevel(request: LogLevelRequest) async throws {
+    /// - Parameter level: 日志级别枚举值
+    public func setLogLevel(level: LogLevel) async throws {
         let url = "\(baseURL)/v1/log/level"
         let parameters: [String: Sendable] = [
-            "level": request.level
+            "level": level.rawValue
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        try await performVoidRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        try await performVoidRequest(request)
     }
     
     /// 获取 MITM 的 CA 证书 (DER 二进制格式)
@@ -772,16 +696,6 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     public func getMITMCACertificate() async throws -> Data {
         let url = "\(baseURL)/v1/mitm/ca"
         let request = self.request(url)
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            request.responseData { response in
-                switch response.result {
-                case .success(let data):
-                    continuation.resume(returning: data)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+        return try await performDataRequest(request)
     }
 }
