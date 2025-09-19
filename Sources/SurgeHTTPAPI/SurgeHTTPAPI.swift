@@ -187,27 +187,35 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取 System Proxy 功能状态 (仅 Mac)
     /// GET /v1/features/system_proxy
+    #if os(macOS)
     public func getSystemProxyState() async throws -> Bool {
         return try await getFeatureState(feature: "system_proxy")
     }
+    #endif
     
     /// 设置 System Proxy 功能状态 (仅 Mac)
     /// POST /v1/features/system_proxy
+    #if os(macOS)
     public func setSystemProxyState(enabled: Bool) async throws {
         try await setFeatureState(feature: "system_proxy", enabled: enabled)
     }
+    #endif
     
     /// 获取 Enhanced Mode 功能状态 (仅 Mac)
     /// GET /v1/features/enhanced_mode
+    #if os(macOS)
     public func getEnhancedModeState() async throws -> Bool {
         return try await getFeatureState(feature: "enhanced_mode")
     }
+    #endif
     
     /// 设置 Enhanced Mode 功能状态 (仅 Mac)
     /// POST /v1/features/enhanced_mode
+    #if os(macOS)
     public func setEnhancedModeState(enabled: Bool) async throws {
         try await setFeatureState(feature: "enhanced_mode", enabled: enabled)
     }
+    #endif
     
     // MARK: - Private Feature Methods
     
@@ -465,26 +473,31 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 切换到另一个配置文件 (仅 Mac)
     /// POST /v1/profiles/switch
+    #if os(macOS)
     public func switchProfile(name: String) async throws {
         let url = "\(baseURL)/v1/profiles/switch"
         let parameters: [String: String] = [
             "name": name
         ]
-        let requestObj = self.request(url, method: .post, parameters: parameters)
-        return try await performVoidRequest(requestObj)
+        let request = self.request(url, method: .post, parameters: parameters)
+        return try await performVoidRequest(request)
     }
+    #endif
     
     /// 获取所有可用的配置文件名称 (仅 Mac 4.0.6+)
     /// GET /v1/profiles
+    #if os(macOS)
     public func getAvailableProfiles() async throws -> [String] {
         let url = "\(baseURL)/v1/profiles"
         let request = self.request(url)
         let json = try await performJSONRequest(request)
         return json["profiles"].arrayValue.map { $0.stringValue }
     }
+    #endif
     
     /// 检查配置文件 (仅 Mac 4.0.6+)
     /// POST /v1/profiles/check
+    #if os(macOS)
     public func checkProfile(name: String) async throws -> String {
         let url = "\(baseURL)/v1/profiles/check"
         let parameters: [String: String] = [
@@ -494,6 +507,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let json = try await performJSONRequest(request)
         return json["error"].string ?? ""
     }
+    #endif
     
     // MARK: - DNS
     
@@ -582,12 +596,14 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 获取当前活动和保存的设备列表
     /// GET /v1/devices
+    #if os(macOS)
     public func getDevices() async throws -> [Device] {
         let url = "\(baseURL)/v1/devices"
         let request = self.request(url)
         let response: DevicesResponse =  try await performDecodableRequest(request)
         return response.devices
     }
+    #endif
 
 
     // Todo: 无法获取，可能 Surge API 有所改变
@@ -603,6 +619,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     
     /// 更改设备属性
     /// POST /v1/devices
+    #if os(macOS)
     public func updateDevice(physicalAddress: String, name: String? = nil, address: String? = nil, shouldHandledBySurge: Bool? = nil) async throws -> String {
         let url = "\(baseURL)/v1/devices"
         var parameters: [String: Sendable] = [
@@ -623,6 +640,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let response =  try await performJSONRequest(request)
         return response["error"].string ?? ""
     }
+    #endif
     
     // MARK: - Misc (杂项)
     
