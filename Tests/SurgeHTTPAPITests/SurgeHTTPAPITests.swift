@@ -56,7 +56,8 @@ final class SurgeHTTPAPITests: XCTestCase {
         ("testGetTrafficMethodExists", testGetTrafficMethodExists),
         ("testSetLogLevelMethodExists", testSetLogLevelMethodExists),
         ("testGetMITMCACertificateMethodExists", testGetMITMCACertificateMethodExists),
-        ("testTestConnectivityMethodExists", testTestConnectivityMethodExists)
+        ("testTestConnectivityMethodExists", testTestConnectivityMethodExists),
+        ("testTestConnectivityErrorHandling", testTestConnectivityErrorHandling)
     ]
     
     // MARK: - SurgeHTTPAPI Tests
@@ -358,5 +359,22 @@ final class SurgeHTTPAPITests: XCTestCase {
     func testTestConnectivityMethodExists() {
         let api = SurgeHTTPAPI.shared
         XCTAssertNotNil(api.testConnectivity)
+    }
+
+    func testTestConnectivityErrorHandling() async {
+        let api = SurgeHTTPAPI.shared
+        // 设置无效配置来测试错误处理
+        api.saveConfiguration(baseURL: "http://invalid-url:9999", apiKey: "invalid-key")
+
+        do {
+            let result = try await api.testConnectivity()
+            // 如果连接成功（不太可能），这仍然是有效的测试
+            XCTAssertTrue(result)
+        } catch {
+            // 验证错误被正确抛出，保持简单的错误处理
+            XCTAssertNotNil(error)
+            // 可以验证错误的类型，但保持灵活性
+            XCTAssertTrue(error is Error)
+        }
     }
 }

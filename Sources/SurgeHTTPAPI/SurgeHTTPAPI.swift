@@ -7,16 +7,16 @@ import Defaults
 ///
 /// 用于与 Surge 的 HTTP API 进行交互，支持所有 Surge 提供的 API 端点。
 /// 使用单例模式，通过 UserDefaults 存储配置信息。
-public class SurgeHTTPAPI: @unchecked Sendable {
+public final class SurgeHTTPAPI: Sendable {
     private let baseURL: String
     private let apiKey: String
     private let session: Session
-    
+
     /// 单例实例
     ///
     /// 使用共享实例可以避免重复配置，推荐在应用中使用此实例。
     public static let shared = SurgeHTTPAPI()
-    
+
     /// 私有初始化方法，从 UserDefaults 读取配置
     ///
     /// 从 UserDefaults 中读取 baseURL 和 apiKey 配置。
@@ -24,7 +24,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     private init() {
         self.baseURL = Defaults[.baseURL]
         self.apiKey = Defaults[.apiKey]
-        
+
         // 创建自定义 Session 并设置超时时间为 10 秒
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 10.0
@@ -32,7 +32,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         self.session = Session(configuration: configuration)
     }
     
-    /// 保存配置到 UserDefaults 以便单例使用
+    /// 保存配置到 UserDefaults
     ///
     /// - Parameters:
     ///   - baseURL: Surge HTTP API 的完整基础 URL (例如: "http://127.0.0.1:6171")
@@ -41,23 +41,23 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         Defaults[.baseURL] = baseURL
         Defaults[.apiKey] = apiKey
     }
-    
+
     /// 获取当前配置的 baseURL
     ///
     /// - Returns: 当前配置的 baseURL
     public func getBaseURL() -> String {
-        return Defaults[.baseURL]
+        return baseURL
     }
-    
+
     /// 获取当前配置的 apiKey
     ///
     /// - Returns: 当前配置的 apiKey
     public func getAPIKey() -> String {
-        return Defaults[.apiKey]
+        return apiKey
     }
     
     // MARK: - Private Methods
-    
+
     /// 创建带有认证头的请求
     ///
     /// - Parameters:
@@ -69,7 +69,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let headers: HTTPHeaders = [
             "X-Key": apiKey
         ]
-        
+
         return session.request(
             url,
             method: method,
@@ -89,7 +89,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let dataTask = request.serializingDecodable(T.self)
         return try await dataTask.value
     }
-    
+
     /// 执行请求并返回JSON响应
     ///
     /// - Parameter request: 要执行的 DataRequest 对象
@@ -100,7 +100,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let data = try await dataTask.value
         return try JSON(data: data)
     }
-    
+
     /// 执行请求不处理响应内容
     ///
     /// - Parameter request: 要执行的 DataRequest 对象
@@ -125,13 +125,13 @@ public class SurgeHTTPAPI: @unchecked Sendable {
     /// 测试连通性
     /// 使用 GET /v1/outbound 测试与 Surge 的连接
     /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
+    /// - Throws: 连接失败时抛出原始错误
     public func testConnectivity() async throws -> Bool {
         do {
             _ = try await getOutboundMode()
             return true
         } catch {
-            print("Surge HTTP API 无法连接: \(error.localizedDescription)")
-            return false
+            throw error
         }
     }
     
@@ -228,7 +228,7 @@ public class SurgeHTTPAPI: @unchecked Sendable {
         let json = try await performJSONRequest(request)
         return json["enabled"].boolValue
     }
-    
+
     /// 设置功能状态的通用方法
     /// - Parameters:
     ///   - feature: 功能名称
