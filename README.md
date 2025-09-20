@@ -68,10 +68,10 @@ dependencies: [
 import SurgeHTTPAPI
 
 // 保存配置到 UserDefaults（只需一次）
-SurgeHTTPAPI.shared.saveConfiguration(baseURL: "http://127.0.0.1:6171", apiKey: "your-api-key")
+SurgeHTTPAPI.saveConfig(baseURL: "http://127.0.0.1:6171", apiKey: "your-api-key")
 
 // 使用单例客户端（推荐）
-let surgeClient = SurgeHTTPAPI.shared
+let surgeClient = SurgeHTTPAPI.createWithConfig()
 ```
 
 ## 支持的 API 端点

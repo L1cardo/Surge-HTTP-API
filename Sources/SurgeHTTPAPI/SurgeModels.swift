@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - 策略列表响应模型
+
 /// 策略列表响应模型，用于表示 /v1/policies 端点的响应数据
 public struct PoliciesResponse: Codable, Sendable {
     /// 代理策略列表
@@ -25,6 +26,7 @@ public struct PoliciesResponse: Codable, Sendable {
 }
 
 // MARK: - 单个策略测试结果模型
+
 /// 单个策略测试结果模型，用于表示单个策略的测试结果
 ///
 /// 该模型包含单个策略测试的结果，其中 tfo 是布尔类型，其他都是整数类型。
@@ -66,6 +68,7 @@ public struct SinglePolicyTestResult: Codable, Sendable {
 }
 
 // MARK: - 策略组策略项模型
+
 /// 策略组策略项模型，用于表示策略组中的单个策略项
 public struct PolicyGroupItem: Codable, Sendable {
     /// 是否为策略组
@@ -96,15 +99,16 @@ public struct PolicyGroupItem: Codable, Sendable {
     
     /// 编码键值
     enum CodingKeys: String, CodingKey {
-        case isGroup = "isGroup"
+        case isGroup
         case name
-        case typeDescription = "typeDescription"
-        case lineHash = "lineHash"
+        case typeDescription
+        case lineHash
         case enabled
     }
 }
 
 // MARK: - 最近请求响应模型
+
 /// 最近请求响应模型，用于表示 /v1/requests/recent 端点的响应数据
 public struct RequestsResponse: Codable, Sendable {
     /// 请求数组
@@ -123,6 +127,7 @@ public struct RequestsResponse: Codable, Sendable {
 }
 
 // MARK: - 请求计时记录模型
+
 /// 请求计时记录模型，用于表示请求处理过程中的各个阶段耗时
 public struct RequestTimingRecord: Codable, Sendable {
     /// 阶段名称
@@ -152,6 +157,7 @@ public struct RequestTimingRecord: Codable, Sendable {
 }
 
 // MARK: - 请求模型
+
 /// 请求模型，用于表示单个网络请求的详细信息
 public struct Request: Codable, Sendable {
     /// 请求 ID
@@ -366,6 +372,7 @@ public struct Request: Codable, Sendable {
 }
 
 // MARK: - 配置文件响应模型
+
 /// 配置文件响应模型，用于表示 /v1/profiles/current 端点的响应数据
 public struct ProfileResponse: Codable, Sendable {
     /// 配置文件内容
@@ -389,12 +396,13 @@ public struct ProfileResponse: Codable, Sendable {
     /// 编码键值
     enum CodingKeys: String, CodingKey {
         case profile
-        case originalProfile = "originalProfile"
+        case originalProfile
         case name
     }
 }
 
 // MARK: - DNS 缓存响应模型
+
 /// DNS 缓存响应模型，用于表示 /v1/dns 端点的响应数据
 public struct DNSCacheResponse: Codable, Sendable {
     /// 本地 DNS 记录数组
@@ -414,11 +422,12 @@ public struct DNSCacheResponse: Codable, Sendable {
     /// 编码键值
     enum CodingKeys: String, CodingKey {
         case local
-        case dnsCache = "dnsCache"
+        case dnsCache
     }
 }
 
 // MARK: - 本地 DNS 记录模型
+
 /// 本地 DNS 记录模型，用于表示本地 DNS 缓存中的单个记录
 public struct LocalDNSRecord: Codable, Sendable {
     /// IP 地址数据
@@ -458,6 +467,7 @@ public struct LocalDNSRecord: Codable, Sendable {
 }
 
 // MARK: - DNS 缓存记录模型
+
 /// DNS 缓存记录模型，用于表示 DNS 缓存中的单个记录
 public struct DNSCacheRecord: Codable, Sendable {
     /// 域名
@@ -501,12 +511,13 @@ public struct DNSCacheRecord: Codable, Sendable {
         case logs
         case data
         case path
-        case timeCost = "timeCost"
-        case expiresTime = "expiresTime"
+        case timeCost
+        case expiresTime
     }
 }
 
 // MARK: - 脚本响应模型
+
 /// 脚本响应模型，用于表示 /v1/scripting 端点的响应数据
 public struct ScriptsResponse: Codable, Sendable {
     /// 脚本数组
@@ -527,14 +538,15 @@ public struct ScriptsResponse: Codable, Sendable {
 public enum ScriptType: String, Codable, Sendable {
     case httpRequest = "http-request"
     case httpResponse = "http-response"
-    case cron = "cron"
-    case event = "event"
-    case rule = "rule"
-    case dns = "dns"
-    case generic = "generic"
+    case cron
+    case event
+    case rule
+    case dns
+    case generic
 }
 
 // MARK: - 脚本模型
+
 /// 脚本模型，用于表示单个脚本的信息
 public struct Script: Sendable {
     /// 脚本路径
@@ -568,6 +580,7 @@ public struct Script: Sendable {
 }
 
 // MARK: - Script Codable 实现
+
 extension Script: Codable {
     public init(from decoder: Decoder) throws {
         let container: KeyedDecodingContainer<Script.CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
@@ -624,6 +637,7 @@ extension Script: Codable {
 }
 
 // MARK: - 动态键
+
 /// 动态键，用于处理未知键名的编码/解码
 struct DynamicKey: CodingKey {
     var stringValue: String
@@ -631,16 +645,17 @@ struct DynamicKey: CodingKey {
     
     init?(stringValue: String) {
         self.stringValue = stringValue
-        self.intValue = nil
+        intValue = nil
     }
     
     init?(intValue: Int) {
-        self.stringValue = "\(intValue)"
+        stringValue = "\(intValue)"
         self.intValue = intValue
     }
 }
 
 // MARK: - 模块状态模型
+
 /// 模块状态模型，用于表示模块的启用和可用状态
 public struct ModulesState: Codable, Sendable {
     /// 已启用的模块列表
@@ -659,6 +674,7 @@ public struct ModulesState: Codable, Sendable {
 }
 
 // MARK: - 设备响应模型
+
 /// 设备响应模型，用于表示 /v1/devices 端点的响应数据
 public struct DevicesResponse: Codable, Sendable {
     /// 设备数组
@@ -677,6 +693,7 @@ public struct DevicesResponse: Codable, Sendable {
 }
 
 // MARK: - 字节统计模型
+
 /// 字节统计模型，用于表示设备的流量统计信息
 public struct BytesStat: Codable, Sendable {
     /// 5分钟内字节数
@@ -741,6 +758,7 @@ public struct BytesStat: Codable, Sendable {
 }
 
 // MARK: - DHCP 设备模型
+
 /// DHCP 设备模型，用于表示 DHCP 设备信息
 public struct DHCPDevice: Codable, Sendable {
     /// 是否应由 Surge 处理
@@ -795,6 +813,7 @@ public struct DHCPDevice: Codable, Sendable {
 }
 
 // MARK: - 设备模型
+
 /// 设备模型，用于表示网络中的设备信息
 public struct Device: Codable, Sendable {
     /// DHCP 最后分配的 IP 地址
@@ -934,6 +953,7 @@ public struct Device: Codable, Sendable {
 }
 
 // MARK: - 事件响应模型
+
 /// 事件响应模型，用于表示 /v1/events 端点的响应数据
 public struct EventsResponse: Codable, Sendable {
     /// 事件数组
@@ -952,6 +972,7 @@ public struct EventsResponse: Codable, Sendable {
 }
 
 // MARK: - 事件模型
+
 /// 事件模型，用于表示事件中心的单个事件
 public struct Event: Codable, Sendable {
     /// 事件标识符
@@ -991,6 +1012,7 @@ public struct Event: Codable, Sendable {
 }
 
 // MARK: - 规则响应模型
+
 /// 规则响应模型，用于表示 /v1/rules 端点的响应数据
 public struct RulesResponse: Codable, Sendable {
     /// 规则数组
@@ -1015,6 +1037,7 @@ public struct RulesResponse: Codable, Sendable {
 }
 
 // MARK: - 流量统计模型
+
 /// 流量统计模型，用于表示单个连接器或接口的流量信息
 public struct TrafficStat: Codable, Sendable {
     /// 当前入站速度
@@ -1044,7 +1067,7 @@ public struct TrafficStat: Codable, Sendable {
     ) {
         self.inCurrentSpeed = inCurrentSpeed
         self.outCurrentSpeed = outCurrentSpeed
-        self.`in` = `in`
+        self.in = `in`
         self.out = out
         self.inMaxSpeed = inMaxSpeed
         self.outMaxSpeed = outMaxSpeed
@@ -1055,7 +1078,7 @@ public struct TrafficStat: Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case inCurrentSpeed
         case outCurrentSpeed
-        case `in` = "in"
+        case `in`
         case out
         case inMaxSpeed
         case outMaxSpeed
@@ -1064,6 +1087,7 @@ public struct TrafficStat: Codable, Sendable {
 }
 
 // MARK: - 流量响应模型
+
 /// 流量响应模型，用于表示 /v1/traffic 端点的响应数据
 public struct TrafficResponse: Codable, Sendable {
     /// 连接器流量统计字典
@@ -1071,7 +1095,7 @@ public struct TrafficResponse: Codable, Sendable {
     /// 开始时间戳
     public let startTime: Double
     /// 网络接口流量统计字典
-    public let `interface`: [String: TrafficStat]
+    public let interface: [String: TrafficStat]
     
     /// 初始化方法
     public init(
@@ -1081,7 +1105,7 @@ public struct TrafficResponse: Codable, Sendable {
     ) {
         self.connector = connector
         self.startTime = startTime
-        self.`interface` = `interface`
+        self.interface = interface
     }
     
     /// 编码键值
@@ -1093,14 +1117,15 @@ public struct TrafficResponse: Codable, Sendable {
 }
 
 // MARK: - 日志级别枚举
+
 /// 日志级别枚举，用于表示不同的日志详细程度
 public enum LogLevel: String, Sendable {
     /// 详细级别 - 输出所有日志信息
-    case verbose = "verbose"
+    case verbose
     /// 信息级别 - 输出一般信息和警告
-    case info = "info"
+    case info
     /// 警告级别 - 只输出警告和错误
-    case warning = "warning"
+    case warning
     /// 通知级别 - 只输出通知信息
-    case notify = "notify"
+    case notify
 }

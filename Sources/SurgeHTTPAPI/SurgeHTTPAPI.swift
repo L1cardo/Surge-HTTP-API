@@ -1,7 +1,7 @@
 import Alamofire
-import SwiftyJSON
-import Foundation
 import Defaults
+import Foundation
+import SwiftyJSON
 
 /// Surge HTTP API 客户端
 ///
@@ -12,18 +12,14 @@ public final class SurgeHTTPAPI: Sendable {
     private let apiKey: String
     private let session: Session
 
-    /// 单例实例
+    /// 创建新实例，使用指定的配置
     ///
-    /// 使用共享实例可以避免重复配置，推荐在应用中使用此实例。
-    public static let shared = SurgeHTTPAPI()
-
-    /// 私有初始化方法，从 UserDefaults 读取配置
-    ///
-    /// 从 UserDefaults 中读取 baseURL 和 apiKey 配置。
-    /// 如果没有配置，则使用默认值。
-    private init() {
-        self.baseURL = Defaults[.baseURL]
-        self.apiKey = Defaults[.apiKey]
+    /// - Parameters:
+    ///   - baseURL: Surge HTTP API 的完整基础 URL (例如: "http://127.0.0.1:6171")
+    ///   - apiKey: API 密钥 (在 Surge 配置文件中设置)
+    public init(baseURL: String, apiKey: String) {
+        self.baseURL = baseURL
+        self.apiKey = apiKey
 
         // 创建自定义 Session 并设置超时时间为 10 秒
         let configuration = URLSessionConfiguration.default
@@ -31,29 +27,39 @@ public final class SurgeHTTPAPI: Sendable {
         configuration.timeoutIntervalForResource = 10.0
         self.session = Session(configuration: configuration)
     }
-    
+
     /// 保存配置到 UserDefaults
     ///
     /// - Parameters:
     ///   - baseURL: Surge HTTP API 的完整基础 URL (例如: "http://127.0.0.1:6171")
     ///   - apiKey: API 密钥 (在 Surge 配置文件中设置)
-    public func saveConfiguration(baseURL: String, apiKey: String) {
+    public static func saveConfig(baseURL: String, apiKey: String) {
         Defaults[.baseURL] = baseURL
         Defaults[.apiKey] = apiKey
+    }
+
+    /// 创建使用当前 UserDefaults 配置的新实例
+    ///
+    /// - Returns: 配置好的 SurgeHTTPAPI 实例
+    public static func createWithConfig() -> SurgeHTTPAPI {
+        return SurgeHTTPAPI(
+            baseURL: Defaults[.baseURL],
+            apiKey: Defaults[.apiKey]
+        )
     }
 
     /// 获取当前配置的 baseURL
     ///
     /// - Returns: 当前配置的 baseURL
     public func getBaseURL() -> String {
-        return baseURL
+        return Defaults[.baseURL]
     }
 
     /// 获取当前配置的 apiKey
     ///
     /// - Returns: 当前配置的 apiKey
     public func getAPIKey() -> String {
-        return apiKey
+        return Defaults[.apiKey]
     }
     
     // MARK: - Private Methods
@@ -292,7 +298,7 @@ public final class SurgeHTTPAPI: Sendable {
     
     /// 测试策略
     /// POST /v1/policies/test
-    public func testPolicies(policyNames: [String], url: String) async throws -> [String: SinglePolicyTestResult] {
+    public func testPolicies(policyNames: [String], url _: String) async throws -> [String: SinglePolicyTestResult] {
         let url = "\(baseURL)/v1/policies/test"
         let parameters: [String: Sendable] = [
             "policy_names": policyNames,
@@ -318,7 +324,7 @@ public final class SurgeHTTPAPI: Sendable {
             let available = value["available"].intValue
             let roundOneTotal = value["round-one-total"].intValue
             
-            let singleResult = SinglePolicyTestResult (
+            let singleResult = SinglePolicyTestResult(
                 tfo: tfo,
                 tcp: tcp,
                 receive: receive,
@@ -391,7 +397,7 @@ public final class SurgeHTTPAPI: Sendable {
     
     /// 更改选择策略组的选项
     /// POST /v1/policy_groups/select
-    public func setPolicyGroupSelection(groupName: String, policy: String) async throws{
+    public func setPolicyGroupSelection(groupName: String, policy: String) async throws {
         let url = "\(baseURL)/v1/policy_groups/select"
         let parameters = [
             "group_name": groupName,
@@ -410,7 +416,7 @@ public final class SurgeHTTPAPI: Sendable {
         ]
         let request = self.request(url, method: .post, parameters: parameters)
         let json = try await performJSONRequest(request)
-        return json["available"].arrayValue.map { $0.stringValue}
+        return json["available"].arrayValue.map { $0.stringValue }
     }
     
     // MARK: - Requests (请求管理)
@@ -420,7 +426,7 @@ public final class SurgeHTTPAPI: Sendable {
     public func getRecentRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/recent"
         let request = self.request(url)
-        let response: RequestsResponse =  try await performDecodableRequest(request)
+        let response: RequestsResponse = try await performDecodableRequest(request)
         return response.requests
     }
 
@@ -429,7 +435,7 @@ public final class SurgeHTTPAPI: Sendable {
     public func getActiveRequests() async throws -> [Request] {
         let url = "\(baseURL)/v1/requests/active"
         let request = self.request(url)
-        let response: RequestsResponse =  try await performDecodableRequest(request)
+        let response: RequestsResponse = try await performDecodableRequest(request)
         return response.requests
     }
     
@@ -562,7 +568,7 @@ public final class SurgeHTTPAPI: Sendable {
             "timeout": timeout
         ]
         let request = self.request(url, method: .post, parameters: parameters)
-        let response =  try await performJSONRequest(request)
+        let response = try await performJSONRequest(request)
         return response["output"].string ?? ""
     }
     
@@ -574,7 +580,7 @@ public final class SurgeHTTPAPI: Sendable {
             "script_name": scriptName
         ]
         let request = self.request(url, method: .post, parameters: parameters)
-        let response =  try await performJSONRequest(request)
+        let response = try await performJSONRequest(request)
         return response["output"].string ?? ""
     }
     
@@ -585,11 +591,11 @@ public final class SurgeHTTPAPI: Sendable {
     public func getDevices() async throws -> [Device] {
         let url = "\(baseURL)/v1/devices"
         let request = self.request(url)
-        let response: DevicesResponse =  try await performDecodableRequest(request)
+        let response: DevicesResponse = try await performDecodableRequest(request)
         return response.devices
     }
 
-    // Todo: 无法获取，可能 Surge API 有所改变
+    // TODO: 无法获取，可能 Surge API 有所改变
     // /// 获取设备图标
     // /// GET /v1/devices/icon?id={iconID}
     // public func getDeviceIcon(iconID: String) async throws -> Data {
@@ -619,7 +625,7 @@ public final class SurgeHTTPAPI: Sendable {
         }
 
         let request = self.request(url, method: .post, parameters: parameters)
-        let response =  try await performJSONRequest(request)
+        let response = try await performJSONRequest(request)
         return response["error"].string ?? ""
     }
     
@@ -638,7 +644,7 @@ public final class SurgeHTTPAPI: Sendable {
     public func getEvents() async throws -> [Event] {
         let url = "\(baseURL)/v1/events"
         let request = self.request(url)
-        let response: EventsResponse =  try await performDecodableRequest(request)
+        let response: EventsResponse = try await performDecodableRequest(request)
         return response.events
     }
     

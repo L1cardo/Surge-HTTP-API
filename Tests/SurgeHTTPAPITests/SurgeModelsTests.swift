@@ -1,9 +1,8 @@
-import XCTest
 @testable import SurgeHTTPAPI
+import XCTest
 
 final class SurgeModelsTests: XCTestCase {
-    
-    static var allTests = [
+    static let allTests = [
         ("testPoliciesResponseInitialization", testPoliciesResponseInitialization),
         ("testPoliciesResponseCodable", testPoliciesResponseCodable),
         ("testSinglePolicyTestResultInitialization", testSinglePolicyTestResultInitialization),

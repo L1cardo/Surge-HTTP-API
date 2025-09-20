@@ -1,5 +1,5 @@
-import XCTest
 @testable import SurgeHTTPAPITests
+import XCTest
 
 XCTMain([
     testCase(SurgeModelsTests.allTests),
