@@ -128,7 +128,24 @@ public final class SurgeHTTPAPI: Sendable {
 
     // MARK: - Connectivity Test (连通性测试)
 
-    /// 测试连通性
+    /// 一次性测试连通性
+    /// 使用指定的配置临时创建实例测试与 Surge 的连接
+    /// - Parameters:
+    ///   - baseURL: Surge HTTP API 的完整基础 URL
+    ///   - apiKey: API 密钥
+    /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
+    /// - Throws: 连接失败时抛出原始错误
+    public static func testConnectivityOnce(baseURL: String, apiKey: String) async throws -> Bool {
+        let tempAPI = SurgeHTTPAPI(baseURL: baseURL, apiKey: apiKey)
+        do {
+            _ = try await tempAPI.getOutboundMode()
+            return true
+        } catch {
+            throw error
+        }
+    }
+
+    /// 测试当前实例配置的连通性
     /// 使用 GET /v1/outbound 测试与 Surge 的连接
     /// - Returns: 如果能成功返回结果，则说明连接正常；否则抛出异常
     /// - Throws: 连接失败时抛出原始错误

@@ -168,8 +168,8 @@ public struct Request: Codable, Sendable {
     public let inMaxSpeed: Int
     /// 网络接口（可选）
     public let interface: String?
-    /// 原始策略名称
-    public let originalPolicyName: String
+    /// 原始策略名称（可选）
+    public let originalPolicyName: String?
     /// 注释数组
     public let notes: [String]
     /// 入站当前速度
@@ -214,8 +214,8 @@ public struct Request: Codable, Sendable {
     public let pathForStatistics: String?
     /// 备注（可选）
     public let remark: String?
-    /// 规则
-    public let rule: String
+    /// 规则（可选）
+    public let rule: String?
     /// 开始日期时间戳
     public let startDate: Double
     /// 是否有响应体
@@ -234,8 +234,8 @@ public struct Request: Codable, Sendable {
     public let engineIdentifier: Int
     /// 是否被拒绝
     public let rejected: Bool
-    /// 计时记录数组
-    public let timingRecords: [RequestTimingRecord]
+    /// 计时记录数组（可选）
+    public let timingRecords: [RequestTimingRecord]?
     /// 远程主机
     public let remoteHost: String
     /// 是否有请求体
@@ -247,7 +247,7 @@ public struct Request: Codable, Sendable {
         remoteAddress: String? = nil,
         inMaxSpeed: Int,
         interface: String? = nil,
-        originalPolicyName: String,
+        originalPolicyName: String? = nil,
         notes: [String],
         inCurrentSpeed: Int,
         failed: Bool,
@@ -270,7 +270,7 @@ public struct Request: Codable, Sendable {
         pid: Int,
         pathForStatistics: String? = nil,
         remark: String? = nil,
-        rule: String,
+        rule: String? = nil,
         startDate: Double,
         streamHasResponseBody: Bool,
         setupCompletedDate: Double,
@@ -280,7 +280,7 @@ public struct Request: Codable, Sendable {
         modified: Bool,
         engineIdentifier: Int,
         rejected: Bool,
-        timingRecords: [RequestTimingRecord],
+        timingRecords: [RequestTimingRecord]? = nil,
         remoteHost: String,
         streamHasRequestBody: Bool
     ) {
