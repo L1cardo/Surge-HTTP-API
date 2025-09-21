@@ -197,7 +197,7 @@ public struct Request: Codable, Sendable {
     /// 远程客户端物理地址（可选）
     public let remoteClientPhysicalAddress: String?
     /// 策略名称
-    public let policyName: String
+    public let policyName: String?
     /// 入站字节数
     public let inBytes: Int
     /// 设备名称
@@ -261,7 +261,7 @@ public struct Request: Codable, Sendable {
         localAddress: String? = nil,
         local: Bool,
         remoteClientPhysicalAddress: String? = nil,
-        policyName: String,
+        policyName: String? = nil,
         inBytes: Int,
         deviceName: String? = nil,
         takeoverMode: Int,
